@@ -1,8 +1,13 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:openclinic/utils/colors.dart';
 import 'package:openclinic/utils/utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -36,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          "Diary Ogranic",
+          "Openclinic",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -55,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final emailField = TextFormField(
-      controller: user..text = "neo",
+      controller: user..text = "3000000001",
       decoration: InputDecoration(
         labelText: 'Login ID',
         labelStyle: TextStyle(color: Colors.white),
@@ -76,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final passwordField = TextFormField(
-      controller: pass..text = "okok",
+      controller: pass..text = "abc123",
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: TextStyle(color: Colors.white),
@@ -221,7 +226,45 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _login() {
-    Navigator.pushNamed(context, "homeViewRoute");
+  void _login() async {
+    //Navigator.pushNamed(context, "homeViewRoute");
+    Response response;
+    try {
+      var userText = user.text;
+      var passText = pass.text;
+      print(userText);
+      print(passText);
+      Dio _dio = new Dio();
+      response = await _dio.post("http://app.vnem.com/app/login/login.php",
+          data: FormData.fromMap({
+            //"func": "jwt",
+            "func": "login",
+            "email": userText,
+            "password": passText,
+          }), onSendProgress: (int sent, int total) {
+        //print("Dio send: $sent $total");
+      });
+
+      var token = response.toString();
+      final body = json.decode(token);
+      print("response : ");
+      print(body);
+      print(body['cid']);
+      //var header = Utils.parseJwtHeader(token);
+      //var payload = Utils.parseJwtPayLoad(token);
+      // print(payload);
+      // Create storage
+      // FlutterSecureStorage storage = FlutterSecureStorage();
+      // // Write value
+      // await storage.write(key: 'jwt', value: token);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString("login", token);
+      print("Login OK");
+      //_token = token;
+      //return {"result": true, "reason": "Login successful"};
+      Navigator.pushNamed(context, "ScanBarcode");
+    } catch (e) {
+      print(e);
+    }
   }
 }
