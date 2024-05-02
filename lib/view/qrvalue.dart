@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:openclinic/utils/colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QRValuePage extends StatefulWidget {
   const QRValuePage({super.key});
@@ -10,16 +13,40 @@ class QRValuePage extends StatefulWidget {
 }
 
 class _QRValuePageState extends State<QRValuePage> {
-  TextEditingController valueName1 = new TextEditingController();
-  TextEditingController valueAdress = new TextEditingController();
+  static TextEditingController valueName = TextEditingController();
+  static TextEditingController valueAdress = TextEditingController();
+  var token = "";
+  var name = "";
+  var adress = "";
+  var CCCD = "";
+  void initState() {
+    super.initState();
+    initToken();
+  }
+
+  Future<void> initToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    token = prefs.getString("tokenCheck")!;
+    print("Init Token : ");
+    print(token);
+    getValueToken();
+  }
+
+  void getValueToken() {
+    final valueJson = json.decode(token.toString());
+    var encodedString = jsonEncode(token.toString());
+    final valueMap = json.decode(encodedString);
+    print(" json body: ");
+    print(valueJson);
+  }
 
   final nameField = TextField(
-    //controller: valueName1,
+    controller: valueName..text = "",
     decoration: InputDecoration(
-      labelText: '',
+      labelText: 'Tên bệnh nhân',
       labelStyle: TextStyle(color: Colors.white),
       prefixIcon: Icon(
-        LineIcons.envelope,
+        LineIcons.user,
         color: Colors.white,
       ),
       enabledBorder: UnderlineInputBorder(
@@ -35,7 +62,7 @@ class _QRValuePageState extends State<QRValuePage> {
   );
 
   final adressField = TextField(
-    // controller: valueAdress..text = '...',
+    controller: valueAdress..text = '...',
     decoration: InputDecoration(
       labelText: '',
       labelStyle: TextStyle(color: Colors.white),
@@ -56,6 +83,26 @@ class _QRValuePageState extends State<QRValuePage> {
     obscureText: true,
   );
 
+  // final infoForm = Padding(
+  //   padding: EdgeInsets.only(top: 30.0),
+  //   //padding: EdgeInsets.fromLTRB(0, 20, 0, 20),
+  //   child: Form(
+  //     child: Column(
+  //       children: <Widget>[
+  //         Text(
+  //           "Thông tin khám bệnh",
+  //           style: TextStyle(
+  //               height: 2,
+  //               //fontWeight: FontWeight.w800,
+  //               fontSize: 16.0,
+  //               color: Color.fromARGB(255, 255, 255, 255)),
+  //         )
+  //         nameField,
+  //         adressField,
+  //       ],
+  //     ),
+  //   ),
+  // );
   @override
   Widget build(BuildContext context) {
     return Scaffold(

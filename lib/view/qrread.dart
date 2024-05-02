@@ -78,13 +78,17 @@ class _QrReadPageState extends State<QRReadPage> {
     Response response;
     try {
       Dio _dio = new Dio();
-      response = await _dio.post("https://vnem.com/test/senddoublecheck.php",
-          //"https://vnem.com/test/checkthe.json",
+      response = await _dio.post(
+          //"https://vnem.com/test/senddoublecheck.php",
+          "https://vnem.com/test/checkthe.json",
+          data: FormData.fromMap({"r": "2"}),
           onSendProgress: (int sent, int total) {});
-      var token = response.toString();
-      final body = json.decode(token);
-      print("CHECK THE");
-      print(body);
+      var tokenCheck = response.toString();
+      //final body = json.decode(token);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString("tokenCheck", tokenCheck);
+      //print(tokenCheck);
+      print("CHECK THE done");
       Navigator.pushNamed(context, "QRReadPage");
     } catch (e) {
       print(e);

@@ -50,6 +50,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         Text(
           "Đăng nhập hệ thống!",
+          //textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white,
             fontSize: 18.0,
