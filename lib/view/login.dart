@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,6 @@ import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/utils/colors.dart';
 import 'package:openclinic/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -190,7 +190,6 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
@@ -235,21 +234,27 @@ class _LoginPageState extends State<LoginPage> {
       var token = response.toString();
       print(token);
       final body = json.decode(token);
-      print(body);
-      print(body['cid']);
-      //var header = Utils.parseJwtHeader(token);
-      //var payload = Utils.parseJwtPayLoad(token);
-      // print(payload);
-      // Create storage
-      // FlutterSecureStorage storage = FlutterSecureStorage();
-      // // Write value
-      // await storage.write(key: 'jwt', value: token);
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString("login", token);
-      print("Login OK");
-      //_token = token;
-      //return {"result": true, "reason": "Login successful"};
-      Navigator.pushNamed(context, qrCodeReadViewRoute);
+      if (body['status'] == "false") {
+        // CHECK LOGIN
+        var error = body['reason'];
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            duration: Duration(seconds: 2),
+            content: Text(error),
+            //elevation: 0,
+            //behavior: SnackBarBehavior.floating,
+            backgroundColor: Color.fromARGB(255, 255, 46, 46),
+            //contentType: ContentType.failure,
+          ));
+      } else {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString("login", token);
+        print("Login OK");
+        //_token = token;
+        //return {"result": true, "reason": "Login successful"};
+        Navigator.pushNamed(context, qrCodeReadViewRoute);
+      }
     } catch (e) {
       print(e);
     }
