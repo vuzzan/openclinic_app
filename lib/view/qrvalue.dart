@@ -15,7 +15,7 @@ class CheckBHYTPage extends StatefulWidget {
 class _CheckBHYTPageState extends State<CheckBHYTPage> {
   static TextEditingController valueName = TextEditingController();
   static TextEditingController valueAdress = TextEditingController();
-  static TextEditingController BHYT = TextEditingController();
+
   var token = "";
   var name = "";
   var adress = "";
@@ -35,7 +35,9 @@ class _CheckBHYTPageState extends State<CheckBHYTPage> {
 
   void getValueToken() {
     final valueJson = json.decode(token.toString());
-    print(" json body: ");
+    //var encodedString = jsonEncode(token.toString());
+    // final valueMap = json.decode(valueJson);
+    // print(" json body: ");
     print(valueJson);
   }
 
@@ -61,12 +63,12 @@ class _CheckBHYTPageState extends State<CheckBHYTPage> {
   );
 
   final adressField = TextField(
-    controller: valueAdress..text = '',
+    controller: valueAdress..text = '...',
     decoration: InputDecoration(
-      labelText: 'Địa chỉ',
+      labelText: '',
       labelStyle: TextStyle(color: Colors.white),
       prefixIcon: Icon(
-        LineIcons.addressCard,
+        LineIcons.lock,
         color: Colors.white,
       ),
       enabledBorder: UnderlineInputBorder(
@@ -79,30 +81,9 @@ class _CheckBHYTPageState extends State<CheckBHYTPage> {
     keyboardType: TextInputType.text,
     style: TextStyle(color: Colors.white),
     cursorColor: Colors.white,
-    //obscureText: true,
+    obscureText: true,
   );
 
-  final Mathe = TextField(
-    controller: BHYT..text = '',
-    decoration: InputDecoration(
-      labelText: 'Mã thẻ BHYT',
-      labelStyle: TextStyle(color: Colors.white),
-      prefixIcon: Icon(
-        LineIcons.barcode,
-        color: Colors.white,
-      ),
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.white),
-      ),
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.white),
-      ),
-    ),
-    keyboardType: TextInputType.text,
-    style: TextStyle(color: Colors.white),
-    cursorColor: Colors.white,
-    //obscureText: true,
-  );
   // final infoForm = Padding(
   //   padding: EdgeInsets.only(top: 30.0),
   //   //padding: EdgeInsets.fromLTRB(0, 20, 0, 20),
@@ -128,13 +109,13 @@ class _CheckBHYTPageState extends State<CheckBHYTPage> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
-          padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
+          padding: EdgeInsets.only(top: 150.0, left: 30.0, right: 30.0),
           decoration: BoxDecoration(gradient: primaryGradient),
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[nameField, adressField, Mathe],
+            children: <Widget>[nameField, adressField],
           ),
         ),
       ),

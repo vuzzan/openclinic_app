@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/utils/colors.dart';
 import 'package:openclinic/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final emailField = TextFormField(
-      controller: user..text = "3000000001",
+      controller: user,
       decoration: InputDecoration(
         labelText: 'Login ID',
         labelStyle: TextStyle(color: Colors.white),
@@ -82,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final passwordField = TextFormField(
-      controller: pass..text = "abc123",
+      controller: pass,
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: TextStyle(color: Colors.white),
@@ -112,16 +113,10 @@ class _LoginPageState extends State<LoginPage> {
           children: <Widget>[
             emailField,
             passwordField,
-            // SizedBox(
-            //   width: 200.0,
-            //   height: 20.0,
-            //   child: const Card(child: Text('Hello World!')),
-            // ),
             Text(
               status_msg,
               style: TextStyle(
                   height: 2,
-                  //fontWeight: FontWeight.w800,
                   fontSize: 16.0,
                   color: Color.fromARGB(255, 255, 255, 255)),
             )
@@ -183,14 +178,6 @@ class _LoginPageState extends State<LoginPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Text(
-            //   'New User?',
-            //   style: TextStyle(
-            //     color: Colors.white70,
-            //     fontSize: 18.0,
-            //     fontWeight: FontWeight.w600,
-            //   ),
-            // ),
             Text(
               'Tạo mới !',
               style: TextStyle(
@@ -214,7 +201,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              //logo,
               pageTitle,
               loginForm,
               loginBtn,
@@ -236,9 +222,9 @@ class _LoginPageState extends State<LoginPage> {
       print(userText);
       print(passText);
       Dio _dio = new Dio();
-      response = await _dio.post("http://app.vnem.com/app/login/login.php",
+      response = await _dio.post(apiRoot + "/app/login/login.php",
           data: FormData.fromMap({
-            //"func": "jwt",
+            "device": "app",
             "func": "login",
             "email": userText,
             "password": passText,
@@ -247,8 +233,8 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       var token = response.toString();
+      print(token);
       final body = json.decode(token);
-      print("response : ");
       print(body);
       print(body['cid']);
       //var header = Utils.parseJwtHeader(token);
@@ -263,7 +249,7 @@ class _LoginPageState extends State<LoginPage> {
       print("Login OK");
       //_token = token;
       //return {"result": true, "reason": "Login successful"};
-      Navigator.pushNamed(context, "ScanBarcode");
+      Navigator.pushNamed(context, qrCodeReadViewRoute);
     } catch (e) {
       print(e);
     }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/theme.dart';
 import 'package:openclinic/utils/colors.dart';
-//import 'package:openclinic/theme.dart';
 import '_routing/router.dart' as router;
 
 class App extends StatelessWidget {
@@ -13,7 +13,7 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: buildThemeData(),
       onGenerateRoute: router.generateRoute,
-      initialRoute: "/",
+      initialRoute: landingViewRoute,
     );
   }
 }

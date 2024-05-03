@@ -11,6 +11,7 @@ import 'package:openclinic/view/qrvalue.dart';
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
     case landingViewRoute:
+      print("HOME");
       return MaterialPageRoute(builder: (context) => LoginPage());
     case qrCodeReadViewRoute:
       return MaterialPageRoute(builder: (context) => QRReadPage());
