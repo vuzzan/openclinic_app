@@ -24,7 +24,6 @@ class _QrReadPageState extends State<QRReadPage> {
   TextEditingController txtNgaySinh = new TextEditingController();
 
   String qrResult = 'Nhấn vào đây để quét QR CODE';
-  var valSend = <String>{};
   var token = "";
 
   var step = "checkthe"; // checkthe, checkdiachi, checkin (chon bs va pk)
@@ -51,6 +50,9 @@ class _QrReadPageState extends State<QRReadPage> {
       if (!mounted) return;
       setState(() {
         this.qrResult = qrCode.toString();
+        print("qrResult :---------");
+        print(qrResult);
+        print("qrResult END ------------------");
         GetValue(qrResult);
       });
     } on PlatformException {
@@ -68,6 +70,8 @@ class _QrReadPageState extends State<QRReadPage> {
   }
 
   void GetValue(String value) {
+    //var valSend = <String>{};
+    var valSend = [];
     var values = value.split('|');
     for (var val in values) {
       RegExp hexPattern = RegExp(r'^[a-fA-F0-9]+$');
@@ -84,8 +88,10 @@ class _QrReadPageState extends State<QRReadPage> {
         valSend.add(val);
       }
     }
-    //
-    CheckThe();
+    print("valSend : ");
+    print(valSend);
+    print("end ---------------- ");
+    ReturnDataText(valSend);
   }
 
   Future<void> CheckThe() async {
@@ -112,12 +118,47 @@ class _QrReadPageState extends State<QRReadPage> {
     }
   }
 
-  sendCheckThe() {
-    String strCCCD = '111111111111|000000000|tên|12122000|địa chỉ chỉ|08072021';
-    String theBHYT =
-        'GD4494920711100|4cc6b0c6a16e67204de1baa16e68205469e1babf6e|02/01/1953|1|4c6f6e6720587579c3aa6e20312c205468e1bb8b207472e1baa56e204e616d205068c6b0e1bb9b632c20487579e1bb876e2044757920587579c3aa6e2c2054e1bb896e68205175e1baa36e67204e616d|49 - 895|22/07/2020|-|30/06/2020|49074920711100|-|4|22/07/2025|3163aee3cd56aceb-7102|';
-    print(theBHYT);
-    GetValue(theBHYT);
+  ReturnDataText(arrValSend) {
+    //{049200008083, 206274468, Lương Mạnh Việt, 12122000, Nam, Tổ 11, Khôi Phố Long Xuyên 2, Nam Phước, Duy Xuyên, Quảng Nam, 08072021}
+    //{GD4494920688744, Lương Mạnh Việt, 12/12/2000, 1, Long Xuyên 2, Thị trấn Nam Phước, Huyện Duy Xuyên, Tỉnh Quảng Nam, 49 - 159, 01/01/2024, -, 15/12/2023, 49074920688744, 4,  01/10/2021, 15a2a19f2e849284-7102, $
+    //   TextEditingController txtMathe = new TextEditingController();
+    // TextEditingController txtTenBenhNhan = new TextEditingController();
+    // TextEditingController txtNgaySinh = new TextEditingController();
+    String dataToCheck = "";
+    int countCCCD = 11;
+    arrValSend.forEach((element) {
+      dataToCheck = dataToCheck + element + '|'; //data to fill
+    });
+    dataToCheck = dataToCheck.substring(
+        0, dataToCheck.length - 1); // remove '|' cuoi cung
+    print(dataToCheck);
+    print("dataToCheck DONE ----------------");
+    var values = dataToCheck.split('|');
+    setState(() {
+      //fill to textField
+      //datalength>11 ? BHYT : CCCD
+      String CCCD_BHYT = arrValSend[0];
+      String birthday =
+          values.length > countCCCD ? arrValSend[2] : arrValSend[3];
+      String namePatient =
+          values.length > countCCCD ? arrValSend[1] : arrValSend[2];
+      if (birthday.length > 8) {
+        //giu nguyen 12/12/2000
+      } else {
+        // 121220=>12/12/2000
+        String day = birthday.substring(0, 2);
+        String month = birthday.substring(2, 4);
+        String year = birthday.substring(4);
+        birthday = "$day/$month/$year";
+      }
+      txtMathe..text = CCCD_BHYT;
+      txtTenBenhNhan..text = namePatient;
+      txtNgaySinh..text = birthday;
+      print(" CCCD_BHYT = " + CCCD_BHYT);
+      print(" Tên Bệnh Nhân = " + namePatient);
+      print(" Ngày sinh = " + birthday);
+      print("FILL DATA DONE ----------------");
+    });
   }
 
   @override
@@ -128,7 +169,7 @@ class _QrReadPageState extends State<QRReadPage> {
     final checkThe =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
       TextFormField(
-        controller: txtMathe..text = "3000000001",
+        controller: txtMathe..text,
         decoration: InputDecoration(
           labelText: 'Mã Thẻ/CCCD',
           labelStyle: TextStyle(color: Colors.white),
@@ -148,7 +189,7 @@ class _QrReadPageState extends State<QRReadPage> {
         cursorColor: Colors.white,
       ),
       TextFormField(
-        controller: txtTenBenhNhan..text = "txtTenBenhNhan",
+        controller: txtTenBenhNhan..text,
         decoration: InputDecoration(
           labelText: 'Tên Bệnh Nhân',
           labelStyle: TextStyle(color: Colors.white),
@@ -168,12 +209,12 @@ class _QrReadPageState extends State<QRReadPage> {
         cursorColor: Colors.white,
       ),
       TextFormField(
-        controller: txtNgaySinh..text = "txtNgaySinh",
+        controller: txtNgaySinh..text,
         decoration: InputDecoration(
           labelText: 'Ngày Sinh',
           labelStyle: TextStyle(color: Colors.white),
           prefixIcon: Icon(
-            LineIcons.user,
+            LineIcons.birthdayCake,
             color: Colors.white,
           ),
           enabledBorder: UnderlineInputBorder(
@@ -213,7 +254,7 @@ class _QrReadPageState extends State<QRReadPage> {
     final checkDiaChi =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
       TextFormField(
-        controller: txtMathe..text = "1111111111",
+        controller: txtMathe..text,
         decoration: InputDecoration(
           labelText: 'Mã Thẻ/CCCD 2222',
           labelStyle: TextStyle(color: Colors.white),
@@ -233,7 +274,7 @@ class _QrReadPageState extends State<QRReadPage> {
         cursorColor: Colors.white,
       ),
       TextFormField(
-        controller: txtTenBenhNhan..text = "222222222222",
+        controller: txtTenBenhNhan..text,
         decoration: InputDecoration(
           labelText: 'Tên Bệnh Nhân 3333',
           labelStyle: TextStyle(color: Colors.white),
@@ -253,7 +294,7 @@ class _QrReadPageState extends State<QRReadPage> {
         cursorColor: Colors.white,
       ),
       TextFormField(
-        controller: txtNgaySinh..text = "3333333333333333",
+        controller: txtNgaySinh..text,
         decoration: InputDecoration(
           labelText: 'Ngày Sinh',
           labelStyle: TextStyle(color: Colors.white),
