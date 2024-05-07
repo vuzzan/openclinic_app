@@ -47,6 +47,7 @@ class _ShowErrorState extends State<ShowError> {
                   children: <Widget>[
                     TextFormField(
                       controller: txtError..text,
+                      maxLines: null,
                       decoration: InputDecoration(
                         labelText: 'Lỗi',
                         labelStyle: TextStyle(color: Colors.white),

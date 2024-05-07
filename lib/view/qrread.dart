@@ -8,7 +8,6 @@ import 'package:convert/convert.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/utils/colors.dart';
-import 'package:openclinic/view/showerorr.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,6 +24,8 @@ class _QrReadPageState extends State<QRReadPage> {
   TextEditingController txtNgaySinh = new TextEditingController();
   TextEditingController txtDiaChi = new TextEditingController();
   TextEditingController txtHSD = new TextEditingController();
+  TextEditingController txtGioiTinh = new TextEditingController();
+  TextEditingController txtTamThu = new TextEditingController();
 
   String NV_ID = "";
   String NV_NAME = "";
@@ -50,14 +51,12 @@ class _QrReadPageState extends State<QRReadPage> {
     token = prefs.getString("login")!;
     final Value = json.decode(token);
 
-    print("init state pageReadQr");
+    print("init state pageReadQr-------------------");
     print(Value);
+    print("init state END--------------------------");
     setState(() {
       NV_ID = Value["info"]["U_ID"];
       NV_NAME = Value["info"]["g_id"];
-      print(NV_ID);
-      print(NV_NAME);
-      print("------------------");
       for (final item in Value["mst"]["data"]) {
         if (item["LIST_BS"] == null) {
           // No add
@@ -77,18 +76,10 @@ class _QrReadPageState extends State<QRReadPage> {
         //print("DefaultmapBS= " + _ValueBS);
       }
 
-      //mapDV[""] = null;
       print(mapDV);
       print(mapDV.keys);
       print(_ValueDV);
-
-      // print(mapDV[_ValueDV]);
-      // mapBS = mapDV[_ValueDV];
-      // print(mapBS);
     });
-
-    //for (final item in mapDV["Khám Mắt"]) print(item["TEN_NHANVIEN"]);
-    //print(mapDV["Khám Mắt"]);
   }
 
   Future<void> scanQR() async {
@@ -183,14 +174,19 @@ class _QrReadPageState extends State<QRReadPage> {
             ..removeCurrentSnackBar()
             ..showSnackBar(SnackBar(
               duration: Duration(seconds: 2),
-              content: Text("Kiểm tra thẻ thành công"),
+              content: Text("Kiểm tra thẻ thành công !!!",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center),
               dismissDirection: DismissDirection.up,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
               margin: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.height - 70,
+                  bottom: MediaQuery.of(context).size.height - 90,
                   left: 10,
                   right: 10),
 
@@ -256,14 +252,16 @@ class _QrReadPageState extends State<QRReadPage> {
             ..removeCurrentSnackBar()
             ..showSnackBar(SnackBar(
               duration: Duration(seconds: 2),
-              content: Text("Kiểm tra địa chỉ thành công"),
+              content: Text("Kiểm tra địa chỉ thành công !!!",
+                  style: TextStyle(fontSize: 20, color: Colors.black),
+                  textAlign: TextAlign.center),
               dismissDirection: DismissDirection.up,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
               margin: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.height - 70,
+                  bottom: MediaQuery.of(context).size.height - 90,
                   left: 10,
                   right: 10),
               backgroundColor: Color.fromARGB(255, 46, 255, 140),
@@ -537,15 +535,20 @@ class _QrReadPageState extends State<QRReadPage> {
         ),
       )
     ]);
-    //String _dropDownValue = "chọn dịch vụ";
-    //String? _dropDownValue = null;
-    //String? _ValueBS = null;
 
     final checkIn =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-      DropdownButton<String>(
+      DropdownButtonFormField<String>(
         isExpanded: true,
-        iconSize: 30.0,
+        icon: const Icon(LineIcons.list, color: Colors.black),
+        dropdownColor: Color.fromARGB(255, 0, 204, 255),
+        decoration: InputDecoration(
+            labelText: "Chọn Dịch Vụ",
+            prefixIcon: Icon(
+              LineIcons.medicalBook,
+              color: Color.fromARGB(255, 179, 255, 0),
+            ),
+            border: OutlineInputBorder()),
         style: TextStyle(color: Colors.black, fontSize: 22),
         //hint: Text('Chọn dịch vụ'),
         value: _ValueDV,
@@ -563,8 +566,6 @@ class _QrReadPageState extends State<QRReadPage> {
                 mapBS = mapDV[_ValueDV];
                 print("DefaultmapBS= " + _ValueBS);
               }
-
-              //
             },
           );
         },
@@ -577,17 +578,33 @@ class _QrReadPageState extends State<QRReadPage> {
           },
         ).toList(),
       ),
-      DropdownButton<String>(
+      SizedBox(
+        width: 30.0,
+        height: 30.0,
+      ),
+      DropdownButtonFormField<String>(
         isExpanded: true,
-        iconSize: 30.0,
+        icon: const Icon(
+          LineIcons.list,
+          color: Colors.black,
+        ),
+        dropdownColor: Color.fromARGB(255, 0, 204, 255),
+        decoration: InputDecoration(
+            labelText: "Chọn Bác Sĩ",
+            prefixIcon: Icon(
+              LineIcons.doctor,
+              color: Color.fromARGB(255, 179, 255, 0),
+            ),
+            border: OutlineInputBorder()),
         style: TextStyle(color: Colors.black, fontSize: 22),
         //hint: Text('Chọn Bác sĩ'),
         value: _ValueBS,
         onChanged: (newValue) {
           setState(
             () {
-              //_ValueBS = newValue!;
-              //print(_ValueBS);
+              _ValueBS = newValue!;
+              print(_ValueBS);
+              print(mapBS);
             },
           );
         },
@@ -600,6 +617,86 @@ class _QrReadPageState extends State<QRReadPage> {
             );
           },
         ).toList(),
+      ),
+      TextFormField(
+        controller: txtTenBenhNhan..text,
+        decoration: InputDecoration(
+          labelText: 'Tên Bệnh Nhân',
+          labelStyle: TextStyle(color: Colors.white),
+          prefixIcon: Icon(
+            LineIcons.user,
+            color: Colors.white,
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+        ),
+        keyboardType: TextInputType.emailAddress,
+        style: TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
+      ),
+      TextFormField(
+        controller: txtTenBenhNhan..text,
+        decoration: InputDecoration(
+          labelText: 'Tên Bác Sĩ',
+          labelStyle: TextStyle(color: Colors.white),
+          prefixIcon: Icon(
+            LineIcons.user,
+            color: Colors.white,
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+        ),
+        keyboardType: TextInputType.emailAddress,
+        style: TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
+      ),
+      TextFormField(
+        controller: txtTenBenhNhan..text,
+        decoration: InputDecoration(
+          labelText: 'Số Phòng',
+          labelStyle: TextStyle(color: Colors.white),
+          prefixIcon: Icon(
+            LineIcons.user,
+            color: Colors.white,
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+        ),
+        keyboardType: TextInputType.emailAddress,
+        style: TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
+      ),
+      TextFormField(
+        controller: txtTamThu,
+        decoration: InputDecoration(
+          labelText: 'Tạm Thu',
+          labelStyle: TextStyle(color: Colors.white),
+          prefixIcon: Icon(
+            LineIcons.user,
+            color: Colors.white,
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+        ),
+        keyboardType: TextInputType.emailAddress,
+        style: TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
       ),
     ]);
 

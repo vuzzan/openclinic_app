@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final emailField = TextFormField(
-      controller: user..text = "3000001112",
+      controller: user..text = "3000001033",
       decoration: InputDecoration(
         labelText: 'Login ID',
         labelStyle: TextStyle(color: Colors.white),
@@ -241,9 +241,18 @@ class _LoginPageState extends State<LoginPage> {
           ..removeCurrentSnackBar()
           ..showSnackBar(SnackBar(
             duration: Duration(seconds: 2),
-            content: Text(error),
-            //elevation: 0,
-            //behavior: SnackBarBehavior.floating,
+            content: Text(error,
+                style: TextStyle(fontSize: 20, color: Colors.black),
+                textAlign: TextAlign.center),
+            dismissDirection: DismissDirection.up,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).size.height - 350,
+                left: 10,
+                right: 10),
             backgroundColor: Color.fromARGB(255, 255, 46, 46),
             //contentType: ContentType.failure,
           ));
@@ -251,6 +260,8 @@ class _LoginPageState extends State<LoginPage> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString("login", token);
         print("Login successful");
+        //_token = token;
+        //return {"result": true, "reason": "Login successful"};
         Navigator.pushNamed(context, qrCodeReadViewRoute);
       }
     } catch (e) {
