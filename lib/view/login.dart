@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final emailField = TextFormField(
-      controller: user,
+      controller: user..text = "3000001112",
       decoration: InputDecoration(
         labelText: 'Login ID',
         labelStyle: TextStyle(color: Colors.white),
@@ -83,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final passwordField = TextFormField(
-      controller: pass,
+      controller: pass..text = "abc123",
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: TextStyle(color: Colors.white),
@@ -232,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       var token = response.toString();
-      print(token);
+      //print(token);
       final body = json.decode(token);
       if (body['status'] == "false") {
         // CHECK LOGIN
@@ -250,9 +250,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString("login", token);
-        print("Login OK");
-        //_token = token;
-        //return {"result": true, "reason": "Login successful"};
+        print("Login successful");
         Navigator.pushNamed(context, qrCodeReadViewRoute);
       }
     } catch (e) {

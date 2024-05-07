@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/view/login.dart';
 import 'package:openclinic/view/qrread.dart';
-import 'package:openclinic/view/qrvalue.dart';
+import 'package:openclinic/view/showerorr.dart';
 
 // const String landingViewRoute = '/';
 // const String loginViewRoute = 'Login';
@@ -15,8 +15,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => LoginPage());
     case qrCodeReadViewRoute:
       return MaterialPageRoute(builder: (context) => QRReadPage());
-    case postCheckViewRoute:
-      return MaterialPageRoute(builder: (context) => CheckBHYTPage());
+    case showError:
+      return MaterialPageRoute(builder: (context) => ShowError());
     default:
       return MaterialPageRoute(builder: (context) => LoginPage());
   }
