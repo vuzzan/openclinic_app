@@ -47,6 +47,7 @@ class _QrReadPageState extends State<QRReadPage> {
   TextEditingController txtTEN_DICH_VU = new TextEditingController();
   TextEditingController txtNGAY_YL = new TextEditingController();
 
+  DateTime selectedDate = DateTime.now();
   String NV_ID = "";
   String NV_NAME = "";
   String CLINIC_ID = "";
@@ -345,6 +346,187 @@ class _QrReadPageState extends State<QRReadPage> {
     }
   }
 
+  Future<void> XacNhan() async {
+    Response response;
+    try {
+      print("RESPONSE XacNhan : --------------------------");
+      Dio _dio = new Dio();
+      String KETQUA_CODE;
+      String url = "http://saigon.webhop.me:8282/app/checkin/mstdata.php";
+      response = await _dio.post(url,
+          data: FormData.fromMap({
+            "TEN_BENH_NHAN": txtTenBenhNhan.text,
+            "GIOI_TINH": txtGioiTinh.text,
+            "DIA_CHI": txtDiaChi.text,
+            "GT_THE_TU": GT_THE_TU,
+            "GT_THE_DEN": GT_THE_DEN,
+            "NGAY_SINH": txtNgaySinh.text,
+            "MA_THE": txtMatheBHYT.text,
+            "MA_LK": "0",
+            //"MA_DKBD": CLINIC_MACSKCB,
+            "MA_DKBD": "49172", //debug
+            "NV_ID": NV_ID,
+            "NV_NAME": NV_NAME,
+            "U_ID": U_ID_BS,
+            "U_NAME": U_Name_BS,
+            "DV_TEN": _ValueDV,
+            "BS": BS,
+            "BS_TEN": _ValueBS,
+            "BS_DIACHI": DIA_CHI,
+            "NGAY_CAP": "",
+            "MA_QUAN_LY": "",
+            "TEN_CHA_ME": "",
+            "MA_DT_SONG": "",
+            "THOIDIEM_NAMNAM": THOIDIEM_NAMNAM,
+            "CHUOI_KIEM_TRA": "",
+            "TEXT_TAMTHU": "",
+            "CAN_NANG": "",
+            "SO_CCCD": txtMatheCCCD.text,
+            "MATINH_CU_TRU": "", //
+            "MAHUYEN_CU_TRU": "", //
+            "MAXA_CU_TRU": "", //
+            "CLINIC_ID": CLINIC_ID
+          }),
+          onSendProgress: (int sent, int total) {});
+      var tokenCheck = response.toString();
+      final body = json.decode(tokenCheck);
+      print(body);
+
+      //KETQUA_CODE = body["res"]["MA_LK"] == null ? "0" : body["res"]["MA_LK"];
+      if (body["res"]["KETQUA_CODE"] == null ||
+          body["res"]["KETQUA_CODE"] == 0) {
+        var content = body["res"]["KETQUA"] + " xin mời Checkin";
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+                duration: Duration(seconds: 2),
+                content: Text(content,
+                    style: TextStyle(fontSize: 20, color: Colors.black),
+                    textAlign: TextAlign.center),
+                dismissDirection: DismissDirection.up,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                margin: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).size.height - 350,
+                    left: 10,
+                    right: 10),
+                backgroundColor: Colors.green),
+            //contentType: ContentType.failure,
+          );
+        setState(() {
+          _isButtonDisabled = false;
+          print(body["res"]["MA_LK"]);
+          MaLK = body["res"]["MA_LK"];
+        });
+      } else {
+        var error = body["res"]["KETQUA"];
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            duration: Duration(seconds: 2),
+            content: Text(error,
+                style: TextStyle(fontSize: 20, color: Colors.black),
+                textAlign: TextAlign.center),
+            dismissDirection: DismissDirection.up,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).size.height - 350,
+                left: 10,
+                right: 10),
+            backgroundColor: Color.fromARGB(255, 255, 46, 46),
+            //contentType: ContentType.failure,
+          ));
+      }
+
+      print("RESPONSE XacNhan END : --------------------------");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> CheckInBHYT() async {
+    try {
+      Response response;
+      print("RESPONSE CheckInBHYT : --------------------------");
+      print(MaLK);
+      print(CLINIC_ID);
+      Dio _dio = new Dio();
+      String url = "http://saigon.webhop.me:8282/app/checkin/appcheckin.php";
+      response = await _dio.post(url,
+          data: FormData.fromMap({"ma_lk": MaLK, "CLINIC_ID": CLINIC_ID}),
+          onSendProgress: (int sent, int total) {});
+      var tokenCheck = response.toString();
+      final body = json.decode(tokenCheck);
+      print(body);
+      setState(() {
+        step = "CheckInBHYT";
+        txtMA_LK..text = body["MA_LK"];
+        txtSTT..text = body["STT"];
+        txtMA_BN..text = body["MA_BN"];
+        txtHO_TEN..text = body["HO_TEN"];
+        txtSO_CCCD..text = body["SO_CCCD"];
+        txtNGAY_SINH..text = body["NGAY_SINH"];
+        txtGIOI_TINH..text = body["GIOI_TINH"] == 0 ? "Nam" : "Nữ";
+        txtMA_THE_BHYT..text = body["MA_THE_BHYT"];
+        txtMA_DKBD..text = body["MA_DKBD"];
+        txtGT_THE_TU..text = body["GT_THE_TU"];
+        txtGT_THE_DEN..text = body["GT_THE_DEN"];
+        txtMA_DOITUONG_KCB..text = body["MA_DOITUONG_KCB"];
+        txtNGAY_VAO..text = body["NGAY_VAO"];
+        txtMA_LOAI_KCB..text = body["MA_LOAI_KCB"];
+        txtNGAY_YL..text = body["NGAY_YL"];
+        txtMA_CSKCB..text = body["MA_CSKCB"];
+        txtMA_DICH_VU..text = body["MA_DICH_VU"];
+        txtTEN_DICH_VU..text = body["TEN_DICH_VU"];
+      });
+      print("RESPONSE CheckInBHYT END : --------------------------");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void GetValueBS(String valueBS) {
+    var values = valueBS.split(' ');
+    BS = values.last;
+    for (var val in mapBS) {
+      if (val["TEN_NHANVIEN"] == valueBS) {
+        setState(() {
+          MACCHN = val["MACCHN"];
+          DIA_CHI = val["DIA_CHI"];
+          U_ID_BS = val["U_ID"];
+          U_Name_BS = val["U_NAME"];
+        });
+      }
+    }
+    print(BS);
+    print(MACCHN);
+    print(DIA_CHI);
+    print(U_ID_BS);
+    print(U_Name_BS);
+  }
+
+  SendBHYT() async {
+    //Navigator.pushNamed(context, "homeViewRoute");
+    Response response;
+    try {
+      Dio _dio = new Dio();
+      response = await _dio.post(
+        "http://saigon.webhop.me:8282/app/checkin/apiclient.php",
+      );
+      var token = response.toString();
+      final body = json.decode(token);
+      print(body);
+    } catch (e) {
+      print(e);
+    }
+  }
+
   ReturnDataText(arrValSend) {
     //{049200008083, 206274468, Lương Mạnh Việt, 12122000, Nam, Tổ 11, Khôi Phố Long Xuyên 2, Nam Phước, Duy Xuyên, Quảng Nam, 08072021}
     //{GD4494920688744, Lương Mạnh Việt, 12/12/2000, 1, Long Xuyên 2, Thị trấn Nam Phước, Huyện Duy Xuyên, Tỉnh Quảng Nam, 49 - 159, 01/01/2024, -, 15/12/2023, 49074920688744, 4,  01/10/2021, 15a2a19f2e849284-7102, $
@@ -383,6 +565,24 @@ class _QrReadPageState extends State<QRReadPage> {
       print(" Ngày sinh = " + birthday);
       print("FILL DATA DONE ----------------");
     });
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    String dateTime = "";
+    final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(1900),
+        lastDate: DateTime(2025));
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        var valueDate = selectedDate.toString().split(" ");
+        var dateTime = valueDate[0].toString().split("-");
+        txtNgaySinh..text = dateTime[2] + "/" + dateTime[1] + "/" + dateTime[0];
+        print(dateTime);
+      });
+    }
   }
 
   @override
@@ -434,7 +634,8 @@ class _QrReadPageState extends State<QRReadPage> {
         cursorColor: Colors.white,
       ),
       TextFormField(
-        controller: txtNgaySinh..text = "12/12/2000",
+        controller: txtNgaySinh..text,
+        onTap: () => _selectDate(context),
         decoration: InputDecoration(
           labelText: 'Ngày Sinh',
           labelStyle: TextStyle(color: Colors.white),
@@ -1186,186 +1387,5 @@ class _QrReadPageState extends State<QRReadPage> {
                         : (step == "CheckInBHYT" ? sendCheckBHYT : null))),
           ),
         ));
-  }
-
-  Future<void> XacNhan() async {
-    Response response;
-    try {
-      print("RESPONSE XacNhan : --------------------------");
-      Dio _dio = new Dio();
-      String KETQUA_CODE;
-      String url = "http://saigon.webhop.me:8282/app/checkin/mstdata.php";
-      response = await _dio.post(url,
-          data: FormData.fromMap({
-            "TEN_BENH_NHAN": txtTenBenhNhan.text,
-            "GIOI_TINH": txtGioiTinh.text,
-            "DIA_CHI": txtDiaChi.text,
-            "GT_THE_TU": GT_THE_TU,
-            "GT_THE_DEN": GT_THE_DEN,
-            "NGAY_SINH": txtNgaySinh.text,
-            "MA_THE": txtMatheBHYT.text,
-            "MA_LK": "0",
-            //"MA_DKBD": CLINIC_MACSKCB,
-            "MA_DKBD": "49172", //debug
-            "NV_ID": NV_ID,
-            "NV_NAME": NV_NAME,
-            "U_ID": U_ID_BS,
-            "U_NAME": U_Name_BS,
-            "DV_TEN": _ValueDV,
-            "BS": BS,
-            "BS_TEN": _ValueBS,
-            "BS_DIACHI": DIA_CHI,
-            "NGAY_CAP": "",
-            "MA_QUAN_LY": "",
-            "TEN_CHA_ME": "",
-            "MA_DT_SONG": "",
-            "THOIDIEM_NAMNAM": THOIDIEM_NAMNAM,
-            "CHUOI_KIEM_TRA": "",
-            "TEXT_TAMTHU": "",
-            "CAN_NANG": "",
-            "SO_CCCD": txtMatheCCCD.text,
-            "MATINH_CU_TRU": "", //
-            "MAHUYEN_CU_TRU": "", //
-            "MAXA_CU_TRU": "", //
-            "CLINIC_ID": CLINIC_ID
-          }),
-          onSendProgress: (int sent, int total) {});
-      var tokenCheck = response.toString();
-      final body = json.decode(tokenCheck);
-      print(body);
-
-      //KETQUA_CODE = body["res"]["MA_LK"] == null ? "0" : body["res"]["MA_LK"];
-      if (body["res"]["KETQUA_CODE"] == null ||
-          body["res"]["KETQUA_CODE"] == 0) {
-        var content = body["res"]["KETQUA"] + " xin mời Checkin";
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-                duration: Duration(seconds: 2),
-                content: Text(content,
-                    style: TextStyle(fontSize: 20, color: Colors.black),
-                    textAlign: TextAlign.center),
-                dismissDirection: DismissDirection.up,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                margin: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).size.height - 350,
-                    left: 10,
-                    right: 10),
-                backgroundColor: Colors.green),
-            //contentType: ContentType.failure,
-          );
-        setState(() {
-          _isButtonDisabled = false;
-          print(body["res"]["MA_LK"]);
-          MaLK = body["res"]["MA_LK"];
-        });
-      } else {
-        var error = body["res"]["KETQUA"];
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            duration: Duration(seconds: 2),
-            content: Text(error,
-                style: TextStyle(fontSize: 20, color: Colors.black),
-                textAlign: TextAlign.center),
-            dismissDirection: DismissDirection.up,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            margin: EdgeInsets.only(
-                bottom: MediaQuery.of(context).size.height - 350,
-                left: 10,
-                right: 10),
-            backgroundColor: Color.fromARGB(255, 255, 46, 46),
-            //contentType: ContentType.failure,
-          ));
-      }
-
-      print("RESPONSE XacNhan END : --------------------------");
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future<void> CheckInBHYT() async {
-    try {
-      Response response;
-      print("RESPONSE CheckInBHYT : --------------------------");
-      print(MaLK);
-      print(CLINIC_ID);
-      Dio _dio = new Dio();
-      String url = "http://saigon.webhop.me:8282/app/checkin/appcheckin.php";
-      response = await _dio.post(url,
-          data: FormData.fromMap({"ma_lk": MaLK, "CLINIC_ID": CLINIC_ID}),
-          onSendProgress: (int sent, int total) {});
-      var tokenCheck = response.toString();
-      final body = json.decode(tokenCheck);
-      print(body);
-      setState(() {
-        step = "CheckInBHYT";
-        txtMA_LK..text = body["MA_LK"];
-        txtSTT..text = body["STT"];
-        txtMA_BN..text = body["MA_BN"];
-        txtHO_TEN..text = body["HO_TEN"];
-        txtSO_CCCD..text = body["SO_CCCD"];
-        txtNGAY_SINH..text = body["NGAY_SINH"];
-        txtGIOI_TINH..text = body["GIOI_TINH"] == 0 ? "Nam" : "Nữ";
-        txtMA_THE_BHYT..text = body["MA_THE_BHYT"];
-        txtMA_DKBD..text = body["MA_DKBD"];
-        txtGT_THE_TU..text = body["GT_THE_TU"];
-        txtGT_THE_DEN..text = body["GT_THE_DEN"];
-        txtMA_DOITUONG_KCB..text = body["MA_DOITUONG_KCB"];
-        txtNGAY_VAO..text = body["NGAY_VAO"];
-        txtMA_LOAI_KCB..text = body["MA_LOAI_KCB"];
-        txtNGAY_YL..text = body["NGAY_YL"];
-        txtMA_CSKCB..text = body["MA_CSKCB"];
-        txtMA_DICH_VU..text = body["MA_DICH_VU"];
-        txtTEN_DICH_VU..text = body["TEN_DICH_VU"];
-      });
-      print("RESPONSE CheckInBHYT END : --------------------------");
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  void GetValueBS(String valueBS) {
-    var values = valueBS.split(' ');
-    BS = values.last;
-    for (var val in mapBS) {
-      if (val["TEN_NHANVIEN"] == valueBS) {
-        setState(() {
-          MACCHN = val["MACCHN"];
-          DIA_CHI = val["DIA_CHI"];
-          U_ID_BS = val["U_ID"];
-          U_Name_BS = val["U_NAME"];
-        });
-      }
-    }
-    print(BS);
-    print(MACCHN);
-    print(DIA_CHI);
-    print(U_ID_BS);
-    print(U_Name_BS);
-  }
-
-  SendBHYT() async {
-    //Navigator.pushNamed(context, "homeViewRoute");
-    Response response;
-    try {
-      Dio _dio = new Dio();
-      response = await _dio.post(
-        "http://saigon.webhop.me:8282/app/checkin/apiclient.php",
-      );
-      var token = response.toString();
-      final body = json.decode(token);
-      print(body);
-    } catch (e) {
-      print(e);
-    }
   }
 }
