@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -19,19 +20,54 @@ class QRReadPage extends StatefulWidget {
 }
 
 class _QrReadPageState extends State<QRReadPage> {
-  TextEditingController txtMathe = new TextEditingController();
+  TextEditingController txtMatheCCCD = new TextEditingController();
+  TextEditingController txtMatheBHYT = new TextEditingController();
   TextEditingController txtTenBenhNhan = new TextEditingController();
   TextEditingController txtNgaySinh = new TextEditingController();
   TextEditingController txtDiaChi = new TextEditingController();
   TextEditingController txtHSD = new TextEditingController();
   TextEditingController txtGioiTinh = new TextEditingController();
-  TextEditingController txtTamThu = new TextEditingController();
+
+  TextEditingController txtMA_LK = new TextEditingController(); //
+  TextEditingController txtSTT = new TextEditingController(); //
+  TextEditingController txtMA_BN = new TextEditingController(); //
+  TextEditingController txtHO_TEN = new TextEditingController();
+  TextEditingController txtSO_CCCD = new TextEditingController();
+  TextEditingController txtNGAY_SINH = new TextEditingController();
+  TextEditingController txtGIOI_TINH = new TextEditingController();
+  TextEditingController txtMA_THE_BHYT = new TextEditingController();
+  TextEditingController txtMA_DKBD = new TextEditingController();
+  TextEditingController txtGT_THE_TU = new TextEditingController();
+  TextEditingController txtGT_THE_DEN = new TextEditingController();
+  TextEditingController txtMA_DOITUONG_KCB = new TextEditingController();
+  TextEditingController txtNGAY_VAO = new TextEditingController();
+  TextEditingController txtMA_LOAI_KCB = new TextEditingController();
+  TextEditingController txtMA_CSKCB = new TextEditingController();
+  TextEditingController txtMA_DICH_VU = new TextEditingController(); //
+  TextEditingController txtTEN_DICH_VU = new TextEditingController();
+  TextEditingController txtNGAY_YL = new TextEditingController();
 
   String NV_ID = "";
   String NV_NAME = "";
-  String qrResult = 'Nhấn vào đây để quét QR CODE';
+  String CLINIC_ID = "";
+  String CLINIC_MACSKCB = "";
+  String qrResult = '';
   String _ValueDV = "";
   String _ValueBS = "";
+  String U_ID_BS = "";
+  String U_Name_BS = "";
+  String BS = "";
+  String MACCHN = "";
+  String DIA_CHI = "";
+  String GT_THE_TU = "";
+  String GT_THE_DEN = "";
+  String THOIDIEM_NAMNAM = "";
+  int MaLK = 0;
+  String MATINH_CU_TRU = "";
+  String MAHUYEN_CU_TRU = "";
+  String MAXA_CU_TRU = "";
+
+  bool _isButtonDisabled = true;
   var token = "";
   var step = "checkthe"; // checkthe, checkdiachi, checkin (chon bs va pk)
   Map<String, dynamic> mapDV = {};
@@ -56,7 +92,9 @@ class _QrReadPageState extends State<QRReadPage> {
     print("init state END--------------------------");
     setState(() {
       NV_ID = Value["info"]["U_ID"];
-      NV_NAME = Value["info"]["g_id"];
+      NV_NAME = Value["info"]["U_NAME"];
+      CLINIC_ID = Value["info"]["CLINIC_ID"];
+      CLINIC_MACSKCB = Value["info"]["CLINIC_MACSKCB"];
       for (final item in Value["mst"]["data"]) {
         if (item["LIST_BS"] == null) {
           // No add
@@ -79,6 +117,8 @@ class _QrReadPageState extends State<QRReadPage> {
       print(mapDV);
       print(mapDV.keys);
       print(_ValueDV);
+      print(CLINIC_MACSKCB);
+      print(CLINIC_ID);
     });
   }
 
@@ -137,26 +177,26 @@ class _QrReadPageState extends State<QRReadPage> {
     Response response;
     try {
       Dio _dio = new Dio();
-      String url =
-          "http://saigon.webhop.me:8282/app/checkin/senddoublecheck.php";
+
       // response = await _dio.post(
       //     //"https://vnem.com/test/senddoublecheck.php",
-      //     "https://vnem.com/test/checkthe.json",
-      //     data: FormData.fromMap({"r": "2"}),
+      //     "https://vnem.com/test/senddoublecheck.php",
+      //     data: FormData.fromMap({"r": "3"}),
       //     onSendProgress: (int sent, int total) {});
       // var tokenCheck = response.toString();
+      String url =
+          "http://saigon.webhop.me:8282/app/checkin/senddoublecheck.php";
       response = await _dio.post(url,
           data: FormData.fromMap({
             "TEN_BENH_NHAN": txtTenBenhNhan.text,
             "NGAY_SINH": txtNgaySinh.text,
-            "MA_THE": txtMathe.text,
+            "MA_THE": txtMatheCCCD.text,
             "NV_ID": NV_ID,
             "NV_NAME": NV_NAME,
-            "CLINIC_ID": "3"
+            "CLINIC_ID": CLINIC_ID
           }),
           onSendProgress: (int sent, int total) {});
       var tokenCheck = response.toString();
-      //final body = json.decode(token);
       print("RESPONSE CHECK THE: --------------------------");
       final ValResponse = json.decode(tokenCheck);
       print(ValResponse);
@@ -166,10 +206,15 @@ class _QrReadPageState extends State<QRReadPage> {
       print(ValResponse["data"]["strDiaChi"]);
       print(ValResponse["data"]["strTuNgay"]);
       print(ValResponse["data"]["strDenNgay"]);
+      print(ValResponse["data"]["gioitinh"]);
+      print(ValResponse["data"]["strThoidiem5Nam"]);
       final checkCode = ValResponse["data"]["checkCode"];
       if (checkCode == "000") {
         setState(() {
           step = "checkdiachi";
+          GT_THE_TU = ValResponse["data"]["strTuNgay"];
+          GT_THE_DEN = ValResponse["data"]["strDenNgay"];
+          THOIDIEM_NAMNAM = ValResponse["data"]["strThoidiem5Nam"];
           ScaffoldMessenger.of(context)
             ..removeCurrentSnackBar()
             ..showSnackBar(SnackBar(
@@ -193,7 +238,9 @@ class _QrReadPageState extends State<QRReadPage> {
               backgroundColor: Color.fromARGB(255, 46, 255, 140),
               //contentType: ContentType.failure,
             ));
-          txtMathe..text = ValResponse["data"]["strMathe"];
+          txtMatheBHYT..text = ValResponse["data"]["strMathe"];
+          txtGioiTinh
+            ..text = ValResponse["data"]["gioitinh"] == 1 ? "Nam" : "Nữ";
           txtTenBenhNhan..text = ValResponse["data"]["strHoTen"];
           txtNgaySinh..text = ValResponse["data"]["strNgaySinh"];
           txtDiaChi..text = ValResponse["data"]["strDiaChi"];
@@ -220,11 +267,10 @@ class _QrReadPageState extends State<QRReadPage> {
   Future<void> CheckDiaChi() async {
     var DIA_CHI = txtDiaChi.text;
     var values = DIA_CHI.split(',');
-    print(DIA_CHI);
-    print(values);
-    final SMAHUYEN_CU_TRU = values[2];
-    final SMAXA_CU_TRU = values[1];
-    final SMATINH_CU_TRU = values[3];
+
+    MAHUYEN_CU_TRU = values[2];
+    MAXA_CU_TRU = values[1];
+    MATINH_CU_TRU = values[3];
     Response response;
     try {
       Dio _dio = new Dio();
@@ -233,10 +279,10 @@ class _QrReadPageState extends State<QRReadPage> {
           data: FormData.fromMap({
             "func": "sendCheckDiaChi",
             "DIA_CHI": DIA_CHI,
-            "SMAHUYEN_CU_TRU": SMAHUYEN_CU_TRU,
-            "SMAXA_CU_TRU": SMAXA_CU_TRU,
-            "SMATINH_CU_TRU": SMATINH_CU_TRU,
-            "CLINIC_ID": "3"
+            "SMAHUYEN_CU_TRU": MAHUYEN_CU_TRU,
+            "SMAXA_CU_TRU": MAXA_CU_TRU,
+            "SMATINH_CU_TRU": MATINH_CU_TRU,
+            "CLINIC_ID": CLINIC_ID
           }),
           onSendProgress: (int sent, int total) {});
       var tokenCheck = response.toString();
@@ -244,8 +290,7 @@ class _QrReadPageState extends State<QRReadPage> {
       print("RESPONSE CHECK DIA CHI: --------------------------");
       final ValResponse = json.decode(tokenCheck);
       print(ValResponse);
-      ValResponse["data"] = true; //DEBUG TRUE
-      if (ValResponse["data"]) {
+      if (ValResponse["data"] != false) {
         setState(() {
           step = "checkin";
           ScaffoldMessenger.of(context)
@@ -267,7 +312,30 @@ class _QrReadPageState extends State<QRReadPage> {
               backgroundColor: Color.fromARGB(255, 46, 255, 140),
             ));
         });
-      } else {}
+      } else {
+        //sai
+        var content = "Sai Địa Chỉ Xin Mời Nhập Lại";
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+                duration: Duration(seconds: 2),
+                content: Text(content,
+                    style: TextStyle(fontSize: 20, color: Colors.black),
+                    textAlign: TextAlign.center),
+                dismissDirection: DismissDirection.up,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                margin: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).size.height - 350,
+                    left: 10,
+                    right: 10),
+                backgroundColor: Color.fromARGB(255, 255, 0, 0)),
+            //contentType: ContentType.failure,
+          );
+      }
       print("END RESPONSE CHECK DIA CHI: -------------------------------");
 
       print("CHECK DIACHI done");
@@ -307,7 +375,7 @@ class _QrReadPageState extends State<QRReadPage> {
         String year = birthday.substring(4);
         birthday = "$day/$month/$year";
       }
-      txtMathe..text = CCCD_BHYT;
+      txtMatheCCCD..text = CCCD_BHYT;
       txtTenBenhNhan..text = namePatient;
       txtNgaySinh..text = birthday;
       print(" CCCD_BHYT = " + CCCD_BHYT);
@@ -326,7 +394,7 @@ class _QrReadPageState extends State<QRReadPage> {
     final checkThe =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
       TextFormField(
-        controller: txtMathe..text = "049200008083",
+        controller: txtMatheCCCD..text = "049200008083",
         decoration: InputDecoration(
           labelText: 'Mã Thẻ/CCCD',
           labelStyle: TextStyle(color: Colors.white),
@@ -390,10 +458,9 @@ class _QrReadPageState extends State<QRReadPage> {
         height: 60.0,
         width: MediaQuery.of(context).size.width,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(7.0),
-          border: Border.all(color: Colors.white),
-          color: Colors.white,
-        ),
+            borderRadius: BorderRadius.circular(7.0),
+            border: Border.all(color: Colors.white),
+            gradient: chatBubbleGradient2),
         child: TextButton(
           onPressed: CheckThe,
           style: TextButton.styleFrom(
@@ -411,9 +478,9 @@ class _QrReadPageState extends State<QRReadPage> {
     final checkDiaChi =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
       TextFormField(
-        controller: txtMathe..text,
+        controller: txtMatheBHYT..text,
         decoration: InputDecoration(
-          labelText: 'Mã Thẻ/CCCD',
+          labelText: 'Mã Thẻ BHYT',
           labelStyle: TextStyle(color: Colors.white),
           prefixIcon: Icon(
             LineIcons.barcode,
@@ -434,6 +501,26 @@ class _QrReadPageState extends State<QRReadPage> {
         controller: txtTenBenhNhan..text,
         decoration: InputDecoration(
           labelText: 'Tên Bệnh Nhân',
+          labelStyle: TextStyle(color: Colors.white),
+          prefixIcon: Icon(
+            LineIcons.user,
+            color: Colors.white,
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+        ),
+        keyboardType: TextInputType.emailAddress,
+        style: TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
+      ),
+      TextFormField(
+        controller: txtGioiTinh..text,
+        decoration: InputDecoration(
+          labelText: 'Giới tính',
           labelStyle: TextStyle(color: Colors.white),
           prefixIcon: Icon(
             LineIcons.user,
@@ -517,10 +604,9 @@ class _QrReadPageState extends State<QRReadPage> {
         height: 60.0,
         width: MediaQuery.of(context).size.width,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(7.0),
-          border: Border.all(color: Colors.white),
-          color: Colors.white,
-        ),
+            borderRadius: BorderRadius.circular(7.0),
+            border: Border.all(color: Colors.white),
+            gradient: chatBubbleGradient2),
         child: TextButton(
           onPressed: CheckDiaChi,
           style: TextButton.styleFrom(
@@ -541,7 +627,7 @@ class _QrReadPageState extends State<QRReadPage> {
       DropdownButtonFormField<String>(
         isExpanded: true,
         icon: const Icon(LineIcons.list, color: Colors.black),
-        dropdownColor: Color.fromARGB(255, 0, 204, 255),
+        dropdownColor: Colors.white,
         decoration: InputDecoration(
             labelText: "Chọn Dịch Vụ",
             prefixIcon: Icon(
@@ -561,7 +647,7 @@ class _QrReadPageState extends State<QRReadPage> {
               if (mapDV[_ValueDV].length > 0) {
                 _ValueBS = mapDV[_ValueDV][0]["TEN_NHANVIEN"];
                 print("Default = " + _ValueBS);
-
+                GetValueBS(_ValueBS);
                 // Auto update list BS
                 mapBS = mapDV[_ValueDV];
                 print("DefaultmapBS= " + _ValueBS);
@@ -579,8 +665,8 @@ class _QrReadPageState extends State<QRReadPage> {
         ).toList(),
       ),
       SizedBox(
-        width: 30.0,
-        height: 30.0,
+        width: 20.0,
+        height: 20.0,
       ),
       DropdownButtonFormField<String>(
         isExpanded: true,
@@ -588,7 +674,7 @@ class _QrReadPageState extends State<QRReadPage> {
           LineIcons.list,
           color: Colors.black,
         ),
-        dropdownColor: Color.fromARGB(255, 0, 204, 255),
+        dropdownColor: Colors.white,
         decoration: InputDecoration(
             labelText: "Chọn Bác Sĩ",
             prefixIcon: Icon(
@@ -605,6 +691,7 @@ class _QrReadPageState extends State<QRReadPage> {
               _ValueBS = newValue!;
               print(_ValueBS);
               print(mapBS);
+              GetValueBS(_ValueBS);
             },
           );
         },
@@ -617,6 +704,10 @@ class _QrReadPageState extends State<QRReadPage> {
             );
           },
         ).toList(),
+      ),
+      SizedBox(
+        width: 20.0,
+        height: 20.0,
       ),
       TextFormField(
         controller: txtTenBenhNhan..text,
@@ -638,68 +729,435 @@ class _QrReadPageState extends State<QRReadPage> {
         style: TextStyle(color: Colors.white),
         cursorColor: Colors.white,
       ),
-      TextFormField(
-        controller: txtTenBenhNhan..text,
-        decoration: InputDecoration(
-          labelText: 'Tên Bác Sĩ',
-          labelStyle: TextStyle(color: Colors.white),
-          prefixIcon: Icon(
-            LineIcons.user,
-            color: Colors.white,
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.only(top: 40.0),
+              height: 60.0,
+              //width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(7.0),
+                border: Border.all(color: Colors.white),
+                gradient: chatBubbleGradient2,
+              ),
+              child: TextButton(
+                onPressed: XacNhan,
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  minimumSize: Size(88, 36),
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(2.0)),
+                  ),
+                ),
+                child: Text("Xác Nhận"),
+              ),
+            ),
           ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-        ),
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(color: Colors.white),
-        cursorColor: Colors.white,
-      ),
-      TextFormField(
-        controller: txtTenBenhNhan..text,
-        decoration: InputDecoration(
-          labelText: 'Số Phòng',
-          labelStyle: TextStyle(color: Colors.white),
-          prefixIcon: Icon(
-            LineIcons.user,
-            color: Colors.white,
-          ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-        ),
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(color: Colors.white),
-        cursorColor: Colors.white,
-      ),
-      TextFormField(
-        controller: txtTamThu,
-        decoration: InputDecoration(
-          labelText: 'Tạm Thu',
-          labelStyle: TextStyle(color: Colors.white),
-          prefixIcon: Icon(
-            LineIcons.user,
-            color: Colors.white,
-          ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-        ),
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(color: Colors.white),
-        cursorColor: Colors.white,
+          SizedBox(width: 10, height: 10),
+          Expanded(
+              child: Container(
+            margin: EdgeInsets.only(top: 40.0),
+            height: 60.0,
+            //width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(7.0),
+              border: Border.all(color: Colors.white),
+              gradient: chatBubbleGradient2,
+            ),
+            child: TextButton(
+              onPressed: _isButtonDisabled ? null : CheckInBHYT,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black87,
+                minimumSize: Size(88, 36),
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(2.0)),
+                ),
+              ),
+              child: Text('CHECK IN'),
+            ),
+          )),
+        ],
       ),
     ]);
-
+    final sendCheckBHYT =
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+      Row(
+        //row1
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtTEN_DICH_VU..text,
+              decoration: InputDecoration(
+                labelText: 'Tên Dịch Vụ',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtNGAY_YL..text,
+              decoration: InputDecoration(
+                labelText: 'Ngày Y Lệnh',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        //2
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtHO_TEN..text,
+              decoration: InputDecoration(
+                labelText: 'Họ Tên',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtGIOI_TINH..text,
+              decoration: InputDecoration(
+                labelText: 'Giới Tính',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        //3
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtMA_THE_BHYT..text,
+              decoration: InputDecoration(
+                labelText: 'Mã Thẻ BHYT',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtSO_CCCD..text,
+              decoration: InputDecoration(
+                labelText: 'Số CCCD',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        //4
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtNGAY_SINH..text,
+              decoration: InputDecoration(
+                labelText: 'Ngày Sinh',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtNGAY_VAO..text,
+              decoration: InputDecoration(
+                labelText: 'Ngày vào',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        //5
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtGT_THE_TU..text,
+              decoration: InputDecoration(
+                labelText: 'Từ Ngày',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtGT_THE_DEN..text,
+              decoration: InputDecoration(
+                labelText: 'Đến Ngày',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        //7
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtMA_DKBD..text,
+              decoration: InputDecoration(
+                labelText: 'MÃ DKBD',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtMA_CSKCB..text,
+              decoration: InputDecoration(
+                labelText: 'MÃ CSKCB',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        //8
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtMA_LK..text,
+              decoration: InputDecoration(
+                labelText: 'Mã Liên kết',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtSTT..text,
+              decoration: InputDecoration(
+                labelText: 'Số Thứ tự',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        //9
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: txtMA_BN..text,
+              decoration: InputDecoration(
+                labelText: 'MÃ Bệnh Nhân',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+          SizedBox(width: 10, height: 10),
+          Expanded(
+            child: TextFormField(
+              controller: txtMA_DICH_VU..text,
+              decoration: InputDecoration(
+                labelText: 'Mã Dịch Vụ',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.black),
+              cursorColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+              child: Container(
+            margin: EdgeInsets.only(top: 40.0),
+            height: 60.0,
+            //width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(7.0),
+              border: Border.all(color: Colors.white),
+              gradient: chatBubbleGradient2,
+            ),
+            child: TextButton(
+              onPressed: SendBHYT,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black,
+                minimumSize: Size(88, 36),
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(2.0)),
+                ),
+              ),
+              child: Text('Gởi BHYT'),
+            ),
+          )),
+        ],
+      ),
+    ]);
     return Scaffold(
         appBar: AppBar(
           title: Row(
@@ -723,8 +1181,191 @@ class _QrReadPageState extends State<QRReadPage> {
                 ? checkThe
                 : (step == "checkdiachi"
                     ? checkDiaChi
-                    : (step == "checkin" ? checkIn : null)),
+                    : (step == "checkin"
+                        ? checkIn
+                        : (step == "CheckInBHYT" ? sendCheckBHYT : null))),
           ),
         ));
+  }
+
+  Future<void> XacNhan() async {
+    Response response;
+    try {
+      print("RESPONSE XacNhan : --------------------------");
+      Dio _dio = new Dio();
+      String KETQUA_CODE;
+      String url = "http://saigon.webhop.me:8282/app/checkin/mstdata.php";
+      response = await _dio.post(url,
+          data: FormData.fromMap({
+            "TEN_BENH_NHAN": txtTenBenhNhan.text,
+            "GIOI_TINH": txtGioiTinh.text,
+            "DIA_CHI": txtDiaChi.text,
+            "GT_THE_TU": GT_THE_TU,
+            "GT_THE_DEN": GT_THE_DEN,
+            "NGAY_SINH": txtNgaySinh.text,
+            "MA_THE": txtMatheBHYT.text,
+            "MA_LK": "0",
+            //"MA_DKBD": CLINIC_MACSKCB,
+            "MA_DKBD": "49172", //debug
+            "NV_ID": NV_ID,
+            "NV_NAME": NV_NAME,
+            "U_ID": U_ID_BS,
+            "U_NAME": U_Name_BS,
+            "DV_TEN": _ValueDV,
+            "BS": BS,
+            "BS_TEN": _ValueBS,
+            "BS_DIACHI": DIA_CHI,
+            "NGAY_CAP": "",
+            "MA_QUAN_LY": "",
+            "TEN_CHA_ME": "",
+            "MA_DT_SONG": "",
+            "THOIDIEM_NAMNAM": THOIDIEM_NAMNAM,
+            "CHUOI_KIEM_TRA": "",
+            "TEXT_TAMTHU": "",
+            "CAN_NANG": "",
+            "SO_CCCD": txtMatheCCCD.text,
+            "MATINH_CU_TRU": "", //
+            "MAHUYEN_CU_TRU": "", //
+            "MAXA_CU_TRU": "", //
+            "CLINIC_ID": CLINIC_ID
+          }),
+          onSendProgress: (int sent, int total) {});
+      var tokenCheck = response.toString();
+      final body = json.decode(tokenCheck);
+      print(body);
+
+      //KETQUA_CODE = body["res"]["MA_LK"] == null ? "0" : body["res"]["MA_LK"];
+      if (body["res"]["KETQUA_CODE"] == null ||
+          body["res"]["KETQUA_CODE"] == 0) {
+        var content = body["res"]["KETQUA"] + " xin mời Checkin";
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+                duration: Duration(seconds: 2),
+                content: Text(content,
+                    style: TextStyle(fontSize: 20, color: Colors.black),
+                    textAlign: TextAlign.center),
+                dismissDirection: DismissDirection.up,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                margin: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).size.height - 350,
+                    left: 10,
+                    right: 10),
+                backgroundColor: Colors.green),
+            //contentType: ContentType.failure,
+          );
+        setState(() {
+          _isButtonDisabled = false;
+          print(body["res"]["MA_LK"]);
+          MaLK = body["res"]["MA_LK"];
+        });
+      } else {
+        var error = body["res"]["KETQUA"];
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            duration: Duration(seconds: 2),
+            content: Text(error,
+                style: TextStyle(fontSize: 20, color: Colors.black),
+                textAlign: TextAlign.center),
+            dismissDirection: DismissDirection.up,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).size.height - 350,
+                left: 10,
+                right: 10),
+            backgroundColor: Color.fromARGB(255, 255, 46, 46),
+            //contentType: ContentType.failure,
+          ));
+      }
+
+      print("RESPONSE XacNhan END : --------------------------");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> CheckInBHYT() async {
+    try {
+      Response response;
+      print("RESPONSE CheckInBHYT : --------------------------");
+      print(MaLK);
+      print(CLINIC_ID);
+      Dio _dio = new Dio();
+      String url = "http://saigon.webhop.me:8282/app/checkin/appcheckin.php";
+      response = await _dio.post(url,
+          data: FormData.fromMap({"ma_lk": MaLK, "CLINIC_ID": CLINIC_ID}),
+          onSendProgress: (int sent, int total) {});
+      var tokenCheck = response.toString();
+      final body = json.decode(tokenCheck);
+      print(body);
+      setState(() {
+        step = "CheckInBHYT";
+        txtMA_LK..text = body["MA_LK"];
+        txtSTT..text = body["STT"];
+        txtMA_BN..text = body["MA_BN"];
+        txtHO_TEN..text = body["HO_TEN"];
+        txtSO_CCCD..text = body["SO_CCCD"];
+        txtNGAY_SINH..text = body["NGAY_SINH"];
+        txtGIOI_TINH..text = body["GIOI_TINH"] == 0 ? "Nam" : "Nữ";
+        txtMA_THE_BHYT..text = body["MA_THE_BHYT"];
+        txtMA_DKBD..text = body["MA_DKBD"];
+        txtGT_THE_TU..text = body["GT_THE_TU"];
+        txtGT_THE_DEN..text = body["GT_THE_DEN"];
+        txtMA_DOITUONG_KCB..text = body["MA_DOITUONG_KCB"];
+        txtNGAY_VAO..text = body["NGAY_VAO"];
+        txtMA_LOAI_KCB..text = body["MA_LOAI_KCB"];
+        txtNGAY_YL..text = body["NGAY_YL"];
+        txtMA_CSKCB..text = body["MA_CSKCB"];
+        txtMA_DICH_VU..text = body["MA_DICH_VU"];
+        txtTEN_DICH_VU..text = body["TEN_DICH_VU"];
+      });
+      print("RESPONSE CheckInBHYT END : --------------------------");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void GetValueBS(String valueBS) {
+    var values = valueBS.split(' ');
+    BS = values.last;
+    for (var val in mapBS) {
+      if (val["TEN_NHANVIEN"] == valueBS) {
+        setState(() {
+          MACCHN = val["MACCHN"];
+          DIA_CHI = val["DIA_CHI"];
+          U_ID_BS = val["U_ID"];
+          U_Name_BS = val["U_NAME"];
+        });
+      }
+    }
+    print(BS);
+    print(MACCHN);
+    print(DIA_CHI);
+    print(U_ID_BS);
+    print(U_Name_BS);
+  }
+
+  SendBHYT() async {
+    //Navigator.pushNamed(context, "homeViewRoute");
+    Response response;
+    try {
+      Dio _dio = new Dio();
+      response = await _dio.post(
+        "http://saigon.webhop.me:8282/app/checkin/apiclient.php",
+      );
+      var token = response.toString();
+      final body = json.decode(token);
+      print(body);
+    } catch (e) {
+      print(e);
+    }
   }
 }

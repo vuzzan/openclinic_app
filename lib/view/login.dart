@@ -260,8 +260,6 @@ class _LoginPageState extends State<LoginPage> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString("login", token);
         print("Login successful");
-        //_token = token;
-        //return {"result": true, "reason": "Login successful"};
         Navigator.pushNamed(context, qrCodeReadViewRoute);
       }
     } catch (e) {

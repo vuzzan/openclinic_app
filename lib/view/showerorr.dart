@@ -30,6 +30,10 @@ class _ShowErrorState extends State<ShowError> {
     print(token);
   }
 
+  void BackHome() {
+    Navigator.pushNamed(context, qrCodeReadViewRoute);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,10 +53,10 @@ class _ShowErrorState extends State<ShowError> {
                       controller: txtError..text,
                       maxLines: null,
                       decoration: InputDecoration(
-                        labelText: 'Lỗi',
+                        labelText: 'LỖI',
                         labelStyle: TextStyle(color: Colors.white),
                         prefixIcon: Icon(
-                          LineIcons.doubleCheck,
+                          LineIcons.ban,
                           color: Colors.white,
                         ),
                         enabledBorder: UnderlineInputBorder(
@@ -86,7 +90,7 @@ class _ShowErrorState extends State<ShowError> {
                                 BorderRadius.all(Radius.circular(2.0)),
                           ),
                         ),
-                        child: Text('Trở về trang chủ'),
+                        child: Text('Nhấn đề quét lại mã'),
                       ),
                     )
                   ])
@@ -95,9 +99,5 @@ class _ShowErrorState extends State<ShowError> {
         ),
       ),
     );
-  }
-
-  void BackHome() {
-    Navigator.pushNamed(context, qrCodeReadViewRoute);
   }
 }
