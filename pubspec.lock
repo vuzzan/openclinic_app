@@ -160,6 +160,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  intl:
+    dependency: "direct main"
+    description:
+      name: intl
+      sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.19.0"
   js:
     dependency: transitive
     description:
@@ -381,6 +389,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.99"
+  smart_snackbars:
+    dependency: "direct main"
+    description:
+      name: smart_snackbars
+      sha256: d61cf888926c794b7174b1d838982bc42f987d1b54012f26d7ca30299c36827b
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   source_span:
     dependency: transitive
     description:
