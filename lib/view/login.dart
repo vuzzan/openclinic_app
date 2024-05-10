@@ -190,10 +190,53 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+    final items = ['Three', 'Four'];
+    String selectedValue = 'Four';
     return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Flexible(
+                flex: 1,
+                child: Container(
+                    padding: EdgeInsets.only(top: 5.0, left: 20.0, right: 10.0),
+                    child: Text(
+                      'Setting',
+                      textAlign: TextAlign.left,
+                    ))),
+            Flexible(
+                flex: 1,
+                child: Container(
+                  padding: EdgeInsets.only(top: 5.0, left: 20.0, right: 10.0),
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(30)),
+                  child: DropdownButton<String>(
+                    value: selectedValue,
+                    icon: Padding(
+                        //Icon at tail, arrow bottom is default icon
+                        padding: EdgeInsets.only(left: 20),
+                        child: Icon(Icons.menu)),
+                    onChanged: (newValue) =>
+                        setState(() => selectedValue = newValue!),
+                    items: items
+                        .map<DropdownMenuItem<String>>(
+                            (String value) => DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                ))
+                        .toList(),
+                    iconSize: 42,
+                    underline: SizedBox(),
+                  ),
+                ))
+          ],
+        ),
+        automaticallyImplyLeading: false,
+      ),
       body: SingleChildScrollView(
         child: Container(
-          padding: EdgeInsets.only(top: 150.0, left: 30.0, right: 30.0),
+          padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
           decoration: BoxDecoration(gradient: primaryGradient),
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
@@ -266,4 +309,6 @@ class _LoginPageState extends State<LoginPage> {
       print(e);
     }
   }
+
+  void MenuSetting() {}
 }

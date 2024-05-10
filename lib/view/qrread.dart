@@ -11,6 +11,7 @@ import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/utils/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 
 class QRReadPage extends StatefulWidget {
   const QRReadPage({super.key});
@@ -79,6 +80,7 @@ class _QrReadPageState extends State<QRReadPage> {
       step = "checkthe";
       _ValueDV = "";
       _ValueBS = "";
+      selectedDate = DateTime.now();
     });
     initToken();
   }
@@ -472,7 +474,7 @@ class _QrReadPageState extends State<QRReadPage> {
         txtHO_TEN..text = body["HO_TEN"];
         txtSO_CCCD..text = body["SO_CCCD"];
         txtNGAY_SINH..text = body["NGAY_SINH"];
-        txtGIOI_TINH..text = body["GIOI_TINH"] == 0 ? "Nam" : "Nữ";
+        txtGIOI_TINH..text = body["GIOI_TINH"] == 0 ? "Nữ" : "Nam";
         txtMA_THE_BHYT..text = body["MA_THE_BHYT"];
         txtMA_DKBD..text = body["MA_DKBD"];
         txtGT_THE_TU..text = body["GT_THE_TU"];
@@ -568,7 +570,6 @@ class _QrReadPageState extends State<QRReadPage> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    String dateTime = "";
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: selectedDate,
@@ -676,6 +677,7 @@ class _QrReadPageState extends State<QRReadPage> {
         ),
       )
     ]);
+
     final checkDiaChi =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
       TextFormField(
@@ -1364,11 +1366,16 @@ class _QrReadPageState extends State<QRReadPage> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Check In Bệnh Nhân',
-                textAlign: TextAlign.left,
-              ),
-              ElevatedButton(onPressed: scanQR, child: Text('Quét QR')),
+              Flexible(
+                  flex: 2,
+                  child: Text(
+                    'Check In Bệnh Nhân',
+                    textAlign: TextAlign.left,
+                  )),
+              Flexible(
+                  flex: 1,
+                  child: ElevatedButton(
+                      onPressed: scanQR, child: Text('Quét Mã'))),
             ],
           ),
         ),
