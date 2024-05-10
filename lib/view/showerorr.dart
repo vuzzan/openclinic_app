@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/utils/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,23 +32,11 @@ class _ShowErrorState extends State<ShowError> {
     print(token);
   }
 
-  bool BackHome() {
-    if (isBack) {
-    } else {
-      setState(() {
-        isBack = true;
-        Navigator.pushNamed(context, qrCodeReadViewRoute);
-        print(isBack);
-      });
-    }
-    return isBack;
-  }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        var val = await showDialog<bool>(
+        return await showDialog(
             context: context,
             builder: (context) {
               return AlertDialog(
@@ -58,22 +44,14 @@ class _ShowErrorState extends State<ShowError> {
                 content: Text("Nhấn OK quét lại mã"),
                 actions: [
                   ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(BackHome()),
-                      child: const Text('Yes')),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('OK')),
                   ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(false),
                       child: const Text('No')),
                 ],
               );
             });
-        if (val != null) {
-          // return Future.value(Navigator.pushNamed(context, qrCodeReadViewRoute)
-          //   as FutureOr<bool>?);
-          return Future.value(val);
-          //return Future.value(BackHome());
-        } else {
-          return Future.value(BackHome());
-        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -132,7 +110,9 @@ class _ShowErrorState extends State<ShowError> {
                           color: Colors.white,
                         ),
                         child: TextButton(
-                          onPressed: BackHome,
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.black87,
                             minimumSize: Size(88, 36),

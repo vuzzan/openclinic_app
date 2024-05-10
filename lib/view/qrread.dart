@@ -92,12 +92,13 @@ class _QrReadPageState extends State<QRReadPage> {
 
     print("init state pageReadQr-------------------");
     print(Value);
-    print("init state END--------------------------");
+
     setState(() {
       NV_ID = Value["info"]["U_ID"];
       NV_NAME = Value["info"]["U_NAME"];
       CLINIC_ID = Value["info"]["CLINIC_ID"];
       CLINIC_MACSKCB = Value["info"]["CLINIC_MACSKCB"];
+
       for (final item in Value["mst"]["data"]) {
         if (item["LIST_BS"] == null) {
           // No add
@@ -122,6 +123,7 @@ class _QrReadPageState extends State<QRReadPage> {
       print(_ValueDV);
       print(CLINIC_MACSKCB);
       print(CLINIC_ID);
+      print("init state END--------------------------");
     });
   }
 
@@ -1391,7 +1393,7 @@ class _QrReadPageState extends State<QRReadPage> {
                     ? checkDiaChi
                     : (step == "checkin"
                         ? checkIn
-                        : (step == "CheckInBHYT" ? sendCheckBHYT : null))),
+                        : (step == "CheckInBHYT" ? sendCheckBHYT : checkThe))),
           ),
         ));
   }

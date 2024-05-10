@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +21,46 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController user = new TextEditingController();
   TextEditingController pass = new TextEditingController();
   var status_msg = "";
+  String username = "";
+  String password = "";
+  String apiRoot = "";
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      username = "";
+      password = "";
+      apiRoot = "";
+      checkLoginStatus();
+    });
+  }
+
+  void checkLoginStatus() async {
+    // dang nhap to login
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      username = (prefs.getString('username') == null
+          ? ""
+          : prefs.getString('username'))!;
+      password = (prefs.getString('password') == null
+          ? ""
+          : prefs.getString('password'))!;
+      apiRoot = (prefs.getString('host') == null
+          ? AppConfig.items[0]
+          : prefs.getString('host'))!;
+    });
+    print(username);
+    print(password);
+    if (username.length > 0 && password.length > 0) {
+      // co user pass to log
+      print("Da Dang Nhap");
+      _login();
+    } else {
+      // return login
+      print("Chua Dang Nhap");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -62,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final emailField = TextFormField(
-      controller: user..text = "3000001033",
+      controller: user..text = "3000001072",
       decoration: InputDecoration(
         labelText: 'Login ID',
         labelStyle: TextStyle(color: Colors.white),
@@ -156,113 +195,181 @@ class _LoginPageState extends State<LoginPage> {
 
     final forgotPassword = Padding(
       padding: EdgeInsets.only(top: 50.0),
-      child: InkWell(
-        onTap: () => Navigator.pushNamed(context, ""),
-        child: Center(
-          child: Text(
-            'QUÊN PASSWORD?',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 18.0,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
+      // child: InkWell(
+      //   onTap: () => Navigator.pushNamed(context, ""),
+      //   child: Center(
+      //     child: Text(
+      //       'QUÊN PASSWORD?',
+      //       style: TextStyle(
+      //         color: Colors.white70,
+      //         fontSize: 18.0,
+      //         fontWeight: FontWeight.w600,
+      //       ),
+      //     ),
+      //   ),
+      // ),
     );
 
     final newUser = Padding(
       padding: EdgeInsets.only(top: 20.0),
-      child: InkWell(
-        onTap: () => Navigator.pushNamed(context, "registerViewRoute"),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Tạo mới !',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18.0,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
+      // child: InkWell(
+      //   onTap: () => Navigator.pushNamed(context, "registerViewRoute"),
+      //   child: Row(
+      //     mainAxisAlignment: MainAxisAlignment.center,
+      //     children: <Widget>[
+      //       Text(
+      //         'Tạo mới !',
+      //         style: TextStyle(
+      //           color: Colors.white,
+      //           fontSize: 18.0,
+      //           fontWeight: FontWeight.w600,
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      // ),
     );
-    final items = ['Three', 'Four'];
-    String selectedValue = 'Four';
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Flexible(
-                flex: 1,
+    final items = AppConfig.items;
+    String selectedValue = apiRoot == "" ? items[0] : apiRoot;
+    return WillPopScope(
+      onWillPop: () async {
+        var val = await showDialog<bool>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Xác Nhận"),
+                content: Text("Nhấn OK Thoát"),
+                actions: [
+                  ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('OK')),
+                  ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('No')),
+                ],
+              );
+            });
+        if (val != null) {
+          return Future.value(val);
+          //return Future.value(BackHome());
+        } else {
+          return Future.value(false);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                  flex: 1,
+                  child: Container(
+                      child: Text(
+                    'Chọn Host',
+                    textAlign: TextAlign.start,
+                  ))),
+              Flexible(
+                flex: 2,
                 child: Container(
-                    padding: EdgeInsets.only(top: 5.0, left: 20.0, right: 10.0),
-                    child: Text(
-                      'Setting',
-                      textAlign: TextAlign.left,
-                    ))),
-            Flexible(
-                flex: 1,
-                child: Container(
-                  padding: EdgeInsets.only(top: 5.0, left: 20.0, right: 10.0),
-                  decoration:
-                      BoxDecoration(borderRadius: BorderRadius.circular(30)),
-                  child: DropdownButton<String>(
-                    value: selectedValue,
-                    icon: Padding(
-                        //Icon at tail, arrow bottom is default icon
-                        padding: EdgeInsets.only(left: 20),
-                        child: Icon(Icons.menu)),
-                    onChanged: (newValue) =>
-                        setState(() => selectedValue = newValue!),
-                    items: items
-                        .map<DropdownMenuItem<String>>(
-                            (String value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ))
-                        .toList(),
-                    iconSize: 42,
-                    underline: SizedBox(),
+                  //textAlign: TextAlign,
+                  padding: EdgeInsets.only(top: 5.0, bottom: 5.0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                ))
-          ],
-        ),
-        automaticallyImplyLeading: false,
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
-          decoration: BoxDecoration(gradient: primaryGradient),
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              pageTitle,
-              loginForm,
-              loginBtn,
-              forgotPassword,
-              newUser
+                  child: DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    value: selectedValue,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(
+                              color: Color.fromARGB(255, 244, 54, 54),
+                              width: 5.0)),
+                    ),
+                    items: items
+                        .map((item) => DropdownMenuItem<String>(
+                              alignment: Alignment.center,
+                              value: item,
+                              child: Text(
+                                item,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedValue = value!;
+                        apiRoot = selectedValue;
+                        saveHost(selectedValue);
+                        print(apiRoot);
+                      });
+                    },
+                  ),
+                ),
+              )
             ],
+          ),
+          automaticallyImplyLeading: false,
+        ),
+        body: SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.only(top: 70.0, left: 30.0, right: 30.0),
+            decoration: BoxDecoration(gradient: primaryGradient),
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                pageTitle,
+                loginForm,
+                loginBtn,
+                forgotPassword,
+                newUser
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  void saveLoginInfo(String username, String password) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('username', username);
+    prefs.setString('password', password);
+  }
+
+  void saveHost(String host) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('host', host);
+  }
+
   void _login() async {
     //Navigator.pushNamed(context, "homeViewRoute");
     Response response;
+    var userText = "";
+    var passText = "";
+    if (username.length > 0 && password.length > 0) {
+      // check get user pass in shareRef
+      userText = username;
+      passText = password;
+      print("data in sharedRef");
+    } else {
+      //getdata in textfield
+      userText = user.text;
+      passText = pass.text;
+      print("data in TextField");
+    }
+    print(userText);
+    print(passText);
+    print(apiRoot);
     try {
-      var userText = user.text;
-      var passText = pass.text;
-      print(userText);
-      print(passText);
+      if (userText.length > 0 && passText.length > 0) {
+        saveLoginInfo(userText, passText);
+      }
       Dio _dio = new Dio();
       response = await _dio.post(apiRoot + "/app/login/login.php",
           data: FormData.fromMap({
