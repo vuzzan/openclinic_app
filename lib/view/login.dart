@@ -48,9 +48,12 @@ class _LoginPageState extends State<LoginPage> {
       apiRoot = (prefs.getString('host') == null
           ? AppConfig.items[0]
           : prefs.getString('host'))!;
+      user..text = username;
+      pass..text = password;
     });
-    print(username);
-    print(password);
+
+    print(user..text);
+    print(pass..text);
     if (username.length > 0 && password.length > 0) {
       // co user pass to log
       print("Da Dang Nhap");
@@ -101,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final emailField = TextFormField(
-      controller: user..text = "3000001072",
+      controller: user..text,
       decoration: InputDecoration(
         labelText: 'Login ID',
         labelStyle: TextStyle(color: Colors.white),
@@ -122,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final passwordField = TextFormField(
-      controller: pass..text = "abc123",
+      controller: pass..text,
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: TextStyle(color: Colors.white),
@@ -182,7 +185,8 @@ class _LoginPageState extends State<LoginPage> {
         style: TextButton.styleFrom(
           foregroundColor: Colors.black87,
           minimumSize: Size(88, 36),
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          //padding: EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(2.0)),
           ),
@@ -231,6 +235,7 @@ class _LoginPageState extends State<LoginPage> {
     );
     final items = AppConfig.items;
     String selectedValue = apiRoot == "" ? items[0] : apiRoot;
+
     return WillPopScope(
       onWillPop: () async {
         var val = await showDialog<bool>(
@@ -251,7 +256,6 @@ class _LoginPageState extends State<LoginPage> {
             });
         if (val != null) {
           return Future.value(val);
-          //return Future.value(BackHome());
         } else {
           return Future.value(false);
         }
@@ -416,6 +420,4 @@ class _LoginPageState extends State<LoginPage> {
       print(e);
     }
   }
-
-  void MenuSetting() {}
 }

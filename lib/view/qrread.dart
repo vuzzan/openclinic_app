@@ -12,6 +12,7 @@ import 'package:openclinic/utils/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
+import 'package:camera/camera.dart';
 
 class QRReadPage extends StatefulWidget {
   const QRReadPage({super.key});
@@ -74,6 +75,9 @@ class _QrReadPageState extends State<QRReadPage> {
   var step = "checkthe"; // checkthe, checkdiachi, checkin (chon bs va pk)
   Map<String, dynamic> mapDV = {};
   List<dynamic> mapBS = [];
+  late List<CameraDescription> cameras;
+  late CameraController controller;
+
   void initState() {
     super.initState();
     setState(() {
@@ -117,7 +121,7 @@ class _QrReadPageState extends State<QRReadPage> {
         mapBS = mapDV[_ValueDV];
         //print("DefaultmapBS= " + _ValueBS);
       }
-
+      buscarCameras();
       print(mapDV);
       print(mapDV.keys);
       print(_ValueDV);
@@ -127,10 +131,21 @@ class _QrReadPageState extends State<QRReadPage> {
     });
   }
 
+  Future<void> buscarCameras() async {
+    cameras = await availableCameras();
+    controller = CameraController(cameras[0], ResolutionPreset.medium);
+    controller.initialize().then((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+    });
+  }
+
   Future<void> scanQR() async {
     try {
       final qrCode = await FlutterBarcodeScanner.scanBarcode(
-          '#ff6666', 'cancel', true, ScanMode.QR);
+          '#ff6666', 'Quay Về', true, ScanMode.QR);
       if (!mounted) return;
       setState(() {
         this.qrResult = qrCode.toString();
@@ -182,13 +197,6 @@ class _QrReadPageState extends State<QRReadPage> {
     Response response;
     try {
       Dio _dio = new Dio();
-
-      // response = await _dio.post(
-      //     //"https://vnem.com/test/senddoublecheck.php",
-      //     "https://vnem.com/test/senddoublecheck.php",
-      //     data: FormData.fromMap({"r": "3"}),
-      //     onSendProgress: (int sent, int total) {});
-      // var tokenCheck = response.toString();
       String url =
           "http://saigon.webhop.me:8282/app/checkin/senddoublecheck.php";
       response = await _dio.post(url,
@@ -202,6 +210,7 @@ class _QrReadPageState extends State<QRReadPage> {
           }),
           onSendProgress: (int sent, int total) {});
       var tokenCheck = response.toString();
+      print(tokenCheck);
       print("RESPONSE CHECK THE: --------------------------");
       final ValResponse = json.decode(tokenCheck);
       print(ValResponse);
@@ -555,7 +564,7 @@ class _QrReadPageState extends State<QRReadPage> {
       if (birthday.length > 8) {
         //giu nguyen 12/12/2000
       } else {
-        // 121220=>12/12/2000
+        // 12122000=>12/12/2000
         String day = birthday.substring(0, 2);
         String month = birthday.substring(2, 4);
         String year = birthday.substring(4);
@@ -597,7 +606,7 @@ class _QrReadPageState extends State<QRReadPage> {
     final checkThe =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
       TextFormField(
-        controller: txtMatheCCCD..text = "049200008083",
+        controller: txtMatheCCCD..text,
         decoration: InputDecoration(
           labelText: 'Mã Thẻ/CCCD',
           labelStyle: TextStyle(color: Colors.white),
@@ -617,7 +626,7 @@ class _QrReadPageState extends State<QRReadPage> {
         cursorColor: Colors.white,
       ),
       TextFormField(
-        controller: txtTenBenhNhan..text = "Lương Mạnh Việt",
+        controller: txtTenBenhNhan..text,
         decoration: InputDecoration(
           labelText: 'Tên Bệnh Nhân',
           labelStyle: TextStyle(color: Colors.white),
@@ -1363,38 +1372,49 @@ class _QrReadPageState extends State<QRReadPage> {
         ],
       ),
     ]);
+
     return Scaffold(
-        appBar: AppBar(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                  flex: 2,
-                  child: Text(
-                    'Check In Bệnh Nhân',
-                    textAlign: TextAlign.left,
-                  )),
-              Flexible(
-                  flex: 1,
-                  child: ElevatedButton(
-                      onPressed: scanQR, child: Text('Quét Mã'))),
-            ],
-          ),
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+                flex: 2,
+                child: Text(
+                  'Check In Bệnh Nhân',
+                  textAlign: TextAlign.left,
+                )),
+            Flexible(
+                flex: 1,
+                child:
+                    ElevatedButton(onPressed: scanQR, child: Text('Quét Mã'))),
+          ],
         ),
-        body: SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
-            decoration: BoxDecoration(gradient: primaryGradient),
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: step == "checkthe"
-                ? checkThe
-                : (step == "checkdiachi"
-                    ? checkDiaChi
-                    : (step == "checkin"
-                        ? checkIn
-                        : (step == "CheckInBHYT" ? sendCheckBHYT : checkThe))),
-          ),
-        ));
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
+          decoration: BoxDecoration(gradient: primaryGradient),
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          child: step == "checkthe"
+              ? checkThe
+              : (step == "checkdiachi"
+                  ? checkDiaChi
+                  : (step == "checkin"
+                      ? checkIn
+                      : (step == "CheckInBHYT" ? sendCheckBHYT : checkThe))),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          SharedPreferences preferences = await SharedPreferences.getInstance();
+          await preferences.clear(); // clear data username,password,host
+          Navigator.pushNamed(context, landingViewRoute);
+        },
+        icon: Icon(Icons.logout),
+        label: Text(NV_NAME),
+      ),
+    );
   }
 }
