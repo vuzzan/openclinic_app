@@ -45,15 +45,17 @@ class _LoginPageState extends State<LoginPage> {
       password = (prefs.getString('password') == null
           ? ""
           : prefs.getString('password'))!;
-      apiRoot = (prefs.getString('host') == null
-          ? AppConfig.items[0]
-          : prefs.getString('host'))!;
+      apiRoot =
+          (prefs.getString('host') == null ? "" : prefs.getString('host'))!;
       user..text = username;
       pass..text = password;
+
+      print(" data SharedPreferences in login page");
+      print("username : " + username);
+      print("password : " + password);
+      print("APIroot : " + apiRoot);
     });
 
-    print(user..text);
-    print(pass..text);
     if (username.length > 0 && password.length > 0) {
       // co user pass to log
       print("Da Dang Nhap");
@@ -105,6 +107,11 @@ class _LoginPageState extends State<LoginPage> {
 
     final emailField = TextFormField(
       controller: user..text,
+      onChanged: (value) => {
+        setState(() {
+          username = value;
+        })
+      },
       decoration: InputDecoration(
         labelText: 'Login ID',
         labelStyle: TextStyle(color: Colors.white),
@@ -126,6 +133,11 @@ class _LoginPageState extends State<LoginPage> {
 
     final passwordField = TextFormField(
       controller: pass..text,
+      onChanged: (value) => {
+        setState(() {
+          password = value;
+        })
+      },
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: TextStyle(color: Colors.white),
@@ -233,9 +245,6 @@ class _LoginPageState extends State<LoginPage> {
       //   ),
       // ),
     );
-    final items = AppConfig.items;
-    String selectedValue = apiRoot == "" ? items[0] : apiRoot;
-
     return WillPopScope(
       onWillPop: () async {
         var val = await showDialog<bool>(
@@ -261,66 +270,9 @@ class _LoginPageState extends State<LoginPage> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                  flex: 1,
-                  child: Container(
-                      child: Text(
-                    'Chọn Host',
-                    textAlign: TextAlign.start,
-                  ))),
-              Flexible(
-                flex: 2,
-                child: Container(
-                  //textAlign: TextAlign,
-                  padding: EdgeInsets.only(top: 5.0, bottom: 5.0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: selectedValue,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(
-                              color: Color.fromARGB(255, 244, 54, 54),
-                              width: 5.0)),
-                    ),
-                    items: items
-                        .map((item) => DropdownMenuItem<String>(
-                              alignment: Alignment.center,
-                              value: item,
-                              child: Text(
-                                item,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedValue = value!;
-                        apiRoot = selectedValue;
-                        saveHost(selectedValue);
-                        print(apiRoot);
-                      });
-                    },
-                  ),
-                ),
-              )
-            ],
-          ),
-          automaticallyImplyLeading: false,
-        ),
         body: SingleChildScrollView(
           child: Container(
-            padding: EdgeInsets.only(top: 70.0, left: 30.0, right: 30.0),
+            padding: EdgeInsets.only(top: 150.0, left: 30.0, right: 30.0),
             decoration: BoxDecoration(gradient: primaryGradient),
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
@@ -336,6 +288,17 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () async {
+            Navigator.pushNamed(context, settingPage);
+            if (username.length > 0 && password.length > 0) {
+              saveLoginInfo(username, password);
+            }
+          },
+          icon: Icon(Icons.add_link),
+          label: Text("Nhập host tại đây"),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
@@ -346,14 +309,9 @@ class _LoginPageState extends State<LoginPage> {
     prefs.setString('password', password);
   }
 
-  void saveHost(String host) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('host', host);
-  }
-
   void _login() async {
     //Navigator.pushNamed(context, "homeViewRoute");
-    Response response;
+
     var userText = "";
     var passText = "";
     if (username.length > 0 && password.length > 0) {
@@ -372,21 +330,46 @@ class _LoginPageState extends State<LoginPage> {
     print(apiRoot);
     try {
       if (userText.length > 0 && passText.length > 0) {
-        saveLoginInfo(userText, passText);
+        //saveLoginInfo(userText, passText);
       }
-      Dio _dio = new Dio();
-      response = await _dio.post(apiRoot + "/app/login/login.php",
-          data: FormData.fromMap({
-            "device": "app",
-            "func": "login",
-            "email": userText,
-            "password": passText,
-          }), onSendProgress: (int sent, int total) {
-        //print("Dio send: $sent $total");
-      });
 
-      var token = response.toString();
-      //print(token);
+      Dio _dio = new Dio();
+      Response response;
+      var token;
+      try {
+        response = await _dio.post(apiRoot + "/app/login/login.php",
+            data: FormData.fromMap({
+              "device": "app",
+              "func": "login",
+              "email": userText,
+              "password": passText,
+            }), onSendProgress: (int sent, int total) {
+          //print("Dio send: $sent $total");
+        });
+        print(response);
+        token = response.toString();
+      } on DioError catch (e) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            duration: Duration(seconds: 2),
+            content: Text("Host không chính xác, Vui lòng nhập lại Host!!!",
+                style: TextStyle(fontSize: 20, color: Colors.black),
+                textAlign: TextAlign.center),
+            dismissDirection: DismissDirection.up,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).size.height - 350,
+                left: 10,
+                right: 10),
+            backgroundColor: Color.fromARGB(255, 255, 46, 46),
+            //contentType: ContentType.failure,
+          ));
+      }
+
       final body = json.decode(token);
       if (body['status'] == "false") {
         // CHECK LOGIN

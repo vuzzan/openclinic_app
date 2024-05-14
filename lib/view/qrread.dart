@@ -12,7 +12,7 @@ import 'package:openclinic/utils/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
-import 'package:camera/camera.dart';
+import 'dart:math' as math;
 
 class QRReadPage extends StatefulWidget {
   const QRReadPage({super.key});
@@ -21,7 +21,7 @@ class QRReadPage extends StatefulWidget {
   State<QRReadPage> createState() => _QrReadPageState();
 }
 
-class _QrReadPageState extends State<QRReadPage> {
+class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
   TextEditingController txtMatheCCCD = new TextEditingController();
   TextEditingController txtMatheBHYT = new TextEditingController();
   TextEditingController txtTenBenhNhan = new TextEditingController();
@@ -29,7 +29,7 @@ class _QrReadPageState extends State<QRReadPage> {
   TextEditingController txtDiaChi = new TextEditingController();
   TextEditingController txtHSD = new TextEditingController();
   TextEditingController txtGioiTinh = new TextEditingController();
-
+  //-----
   TextEditingController txtMA_LK = new TextEditingController(); //
   TextEditingController txtSTT = new TextEditingController(); //
   TextEditingController txtMA_BN = new TextEditingController(); //
@@ -48,7 +48,7 @@ class _QrReadPageState extends State<QRReadPage> {
   TextEditingController txtMA_DICH_VU = new TextEditingController(); //
   TextEditingController txtTEN_DICH_VU = new TextEditingController();
   TextEditingController txtNGAY_YL = new TextEditingController();
-
+  //-----
   DateTime selectedDate = DateTime.now();
   String NV_ID = "";
   String NV_NAME = "";
@@ -69,18 +69,26 @@ class _QrReadPageState extends State<QRReadPage> {
   String MATINH_CU_TRU = "";
   String MAHUYEN_CU_TRU = "";
   String MAXA_CU_TRU = "";
-
+  //-----
   bool _isButtonDisabled = true;
+  //-----
   var token = "";
   var step = "checkthe"; // checkthe, checkdiachi, checkin (chon bs va pk)
   Map<String, dynamic> mapDV = {};
   List<dynamic> mapBS = [];
-  late List<CameraDescription> cameras;
-  late CameraController controller;
+  //-----
+  late AnimationController _controller;
+  static const List<IconData> icons = const [Icons.settings, Icons.logout];
+  static const List<String> labels = const ['Cài đặt', 'Đăng xuất'];
 
+  //
   void initState() {
     super.initState();
     setState(() {
+      _controller = new AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 500),
+      );
       step = "checkthe";
       _ValueDV = "";
       _ValueBS = "";
@@ -121,7 +129,7 @@ class _QrReadPageState extends State<QRReadPage> {
         mapBS = mapDV[_ValueDV];
         //print("DefaultmapBS= " + _ValueBS);
       }
-      buscarCameras();
+      //buscarCameras();
       print(mapDV);
       print(mapDV.keys);
       print(_ValueDV);
@@ -131,16 +139,16 @@ class _QrReadPageState extends State<QRReadPage> {
     });
   }
 
-  Future<void> buscarCameras() async {
-    cameras = await availableCameras();
-    controller = CameraController(cameras[0], ResolutionPreset.medium);
-    controller.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    });
-  }
+  // Future<void> buscarCameras() async {
+  //   cameras = await availableCameras();
+  //   controller = CameraController(cameras[0], ResolutionPreset.medium);
+  //   controller.initialize().then((_) {
+  //     if (!mounted) {
+  //       return;
+  //     }
+  //     setState(() {});
+  //   });
+  // }
 
   Future<void> scanQR() async {
     try {
@@ -191,6 +199,44 @@ class _QrReadPageState extends State<QRReadPage> {
     print(valSend);
     print("end ---------------- ");
     ReturnDataText(valSend);
+  }
+
+  ReturnDataText(arrValSend) {
+    String dataToCheck = "";
+    int countCCCD = 11;
+    arrValSend.forEach((element) {
+      dataToCheck = dataToCheck + element + '|'; //data to fill
+    });
+    dataToCheck = dataToCheck.substring(
+        0, dataToCheck.length - 1); // remove '|' cuoi cung
+    print(dataToCheck);
+    print("dataToCheck DONE ----------------");
+    var values = dataToCheck.split('|');
+    setState(() {
+      //fill to textField
+      String CCCD_BHYT = arrValSend[0];
+      //datalength > 11 ? BHYT : CCCD
+      String birthday =
+          values.length > countCCCD ? arrValSend[2] : arrValSend[3];
+      String namePatient =
+          values.length > countCCCD ? arrValSend[1] : arrValSend[2];
+      if (birthday.length > 8) {
+        //giu nguyen 12/12/2000
+      } else {
+        // 12122000=>12/12/2000
+        String day = birthday.substring(0, 2);
+        String month = birthday.substring(2, 4);
+        String year = birthday.substring(4);
+        birthday = "$day/$month/$year";
+      }
+      txtMatheCCCD..text = CCCD_BHYT;
+      txtTenBenhNhan..text = namePatient;
+      txtNgaySinh..text = birthday;
+      print(" CCCD_BHYT = " + CCCD_BHYT);
+      print(" Tên Bệnh Nhân = " + namePatient);
+      print(" Ngày sinh = " + birthday);
+      print("FILL DATA DONE ----------------");
+    });
   }
 
   Future<void> CheckThe() async {
@@ -540,46 +586,6 @@ class _QrReadPageState extends State<QRReadPage> {
     }
   }
 
-  ReturnDataText(arrValSend) {
-    //{049200008083, 206274468, Lương Mạnh Việt, 12122000, Nam, Tổ 11, Khôi Phố Long Xuyên 2, Nam Phước, Duy Xuyên, Quảng Nam, 08072021}
-    //{GD4494920688744, Lương Mạnh Việt, 12/12/2000, 1, Long Xuyên 2, Thị trấn Nam Phước, Huyện Duy Xuyên, Tỉnh Quảng Nam, 49 - 159, 01/01/2024, -, 15/12/2023, 49074920688744, 4,  01/10/2021, 15a2a19f2e849284-7102, $
-    String dataToCheck = "";
-    int countCCCD = 11;
-    arrValSend.forEach((element) {
-      dataToCheck = dataToCheck + element + '|'; //data to fill
-    });
-    dataToCheck = dataToCheck.substring(
-        0, dataToCheck.length - 1); // remove '|' cuoi cung
-    print(dataToCheck);
-    print("dataToCheck DONE ----------------");
-    var values = dataToCheck.split('|');
-    setState(() {
-      //fill to textField
-      //datalength>11 ? BHYT : CCCD
-      String CCCD_BHYT = arrValSend[0];
-      String birthday =
-          values.length > countCCCD ? arrValSend[2] : arrValSend[3];
-      String namePatient =
-          values.length > countCCCD ? arrValSend[1] : arrValSend[2];
-      if (birthday.length > 8) {
-        //giu nguyen 12/12/2000
-      } else {
-        // 12122000=>12/12/2000
-        String day = birthday.substring(0, 2);
-        String month = birthday.substring(2, 4);
-        String year = birthday.substring(4);
-        birthday = "$day/$month/$year";
-      }
-      txtMatheCCCD..text = CCCD_BHYT;
-      txtTenBenhNhan..text = namePatient;
-      txtNgaySinh..text = birthday;
-      print(" CCCD_BHYT = " + CCCD_BHYT);
-      print(" Tên Bệnh Nhân = " + namePatient);
-      print(" Ngày sinh = " + birthday);
-      print("FILL DATA DONE ----------------");
-    });
-  }
-
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
         context: context,
@@ -599,6 +605,8 @@ class _QrReadPageState extends State<QRReadPage> {
 
   @override
   Widget build(BuildContext context) {
+    Color backgroundColor = Color.fromARGB(255, 253, 190, 190);
+    Color foregroundColor = Theme.of(context).disabledColor;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(statusBarColor: primaryColor),
     );
@@ -1372,7 +1380,6 @@ class _QrReadPageState extends State<QRReadPage> {
         ],
       ),
     ]);
-
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -1406,14 +1413,66 @@ class _QrReadPageState extends State<QRReadPage> {
                       : (step == "CheckInBHYT" ? sendCheckBHYT : checkThe))),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          SharedPreferences preferences = await SharedPreferences.getInstance();
-          await preferences.clear(); // clear data username,password,host
-          Navigator.pushNamed(context, landingViewRoute);
-        },
-        icon: Icon(Icons.logout),
-        label: Text(NV_NAME),
+      floatingActionButton: new Column(
+        mainAxisSize: MainAxisSize.min,
+        children: new List.generate(icons.length, (int index) {
+          Widget child = new Container(
+            height: 55.0,
+            width: 56.0,
+            alignment: FractionalOffset.topCenter,
+            child: new ScaleTransition(
+              scale: new CurvedAnimation(
+                parent: _controller,
+                curve: new Interval(0.0, 1.0 - index / icons.length / 2.0,
+                    curve: Curves.easeOut),
+              ),
+              child: new FloatingActionButton(
+                heroTag: null,
+                backgroundColor: backgroundColor,
+                mini: true,
+                child:
+                    new Icon(icons[index], color: foregroundColor, size: 30.0),
+                onPressed: () async {
+                  if (index == 1) {
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                    await preferences
+                        .clear(); // clear data username,password,host
+                    Navigator.pushNamed(context, landingViewRoute);
+                  } else {
+                    Navigator.pushNamed(context, settingPage);
+                  }
+                },
+              ),
+            ),
+          );
+          return child;
+        }).toList()
+          ..add(
+            new FloatingActionButton(
+              heroTag: null,
+              child: new AnimatedBuilder(
+                animation: _controller,
+                builder: (BuildContext context, Widget? child) {
+                  return new Transform(
+                    transform: new Matrix4.rotationZ(
+                        _controller.value * 0.5 * math.pi),
+                    alignment: FractionalOffset.center,
+                    child: new Icon(
+                        _controller.isDismissed ? Icons.add : Icons.close,
+                        color: Colors.black),
+                  );
+                },
+              ),
+              onPressed: () {
+                if (_controller.isDismissed) {
+                  _controller.forward();
+                } else {
+                  _controller.reverse();
+                }
+              },
+            ),
+          ),
       ),
     );
   }
