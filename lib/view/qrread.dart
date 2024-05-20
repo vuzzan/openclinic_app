@@ -729,7 +729,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
           inputFormatters: [
             LengthLimitingTextInputFormatter(15),
           ],
-          controller: txtMatheCCCD..text = "GD4494920688744",
+          controller: txtMatheCCCD..text,
           decoration: InputDecoration(
             labelText: 'Mã Thẻ/CCCD',
             labelStyle: TextStyle(color: Colors.white),
@@ -760,7 +760,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
             CheckTenBenhNhan();
             FocusScope.of(context).nextFocus();
           },
-          controller: txtTenBenhNhan..text = "Lương Mạnh Việt",
+          controller: txtTenBenhNhan..text,
           inputFormatters: [
             LengthLimitingTextInputFormatter(30),
           ],
@@ -789,7 +789,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
       ),
       Focus(
         child: TextFormField(
-          controller: txtNgaySinh..text = "12/12/2000",
+          controller: txtNgaySinh..text,
           onEditingComplete: () {
             print('NgaySinh editing complete');
             UpdateDateTime();

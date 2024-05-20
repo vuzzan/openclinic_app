@@ -172,7 +172,7 @@ class _SettingPageState extends State<SettingPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           if (await saveHost(hostAddress)) {
-            Navigator.pushNamed(context, landingViewRoute);
+            Navigator.popAndPushNamed(context, landingViewRoute);
             //Navigator.pop(context);
           } else {
             _showDialogWarning(context);
