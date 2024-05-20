@@ -24,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   String username = "";
   String password = "";
   String apiRoot = "";
+  bool isLogin = true;
   @override
   void initState() {
     super.initState();
@@ -49,21 +50,27 @@ class _LoginPageState extends State<LoginPage> {
           (prefs.getString('host') == null ? "" : prefs.getString('host'))!;
       user..text = username;
       pass..text = password;
-
-      print(" data SharedPreferences in login page");
-      print("username : " + username);
-      print("password : " + password);
-      print("APIroot : " + apiRoot);
     });
 
     if (username.length > 0 && password.length > 0) {
       // co user pass to log
       print("Da Dang Nhap");
+      setState(() {
+        isLogin = true;
+      });
       _login();
     } else {
-      // return login
       print("Chua Dang Nhap");
+      // return login
+      setState(() {
+        isLogin = false;
+      });
     }
+    print(" data SharedPreferences in login page");
+    print("username : " + username);
+    print("password : " + password);
+    print("APIroot : " + apiRoot);
+    print("islogin : " + isLogin.toString());
   }
 
   @override
@@ -291,8 +298,8 @@ class _LoginPageState extends State<LoginPage> {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
             Navigator.pushNamed(context, settingPage);
-            if (username.length > 0 && password.length > 0) {
-              saveLoginInfo(username, password);
+            if (user.text.length > 0 && pass.text.length > 0) {
+              saveLoginInfo(user.text, pass.text);
             }
           },
           icon: Icon(Icons.add_link),
@@ -305,16 +312,51 @@ class _LoginPageState extends State<LoginPage> {
 
   void saveLoginInfo(String username, String password) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    //await prefs.remove('username');
+    //await prefs.remove('password');
     prefs.setString('username', username);
     prefs.setString('password', password);
+    print("SET data to prefs done");
+  }
+
+  void showInSnackBar(String value, bool isError) {
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        duration: Duration(seconds: 2),
+        content: Text(value,
+            style: TextStyle(fontSize: 20, color: Colors.black),
+            textAlign: TextAlign.center),
+        dismissDirection: DismissDirection.up,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        margin: EdgeInsets.only(bottom: 250, left: 10, right: 10),
+        backgroundColor: isError
+            ? Color.fromARGB(255, 255, 46, 46)
+            : Color.fromARGB(255, 46, 255, 140),
+        //contentType: ContentType.failure,
+      ));
   }
 
   void _login() async {
-    //Navigator.pushNamed(context, "homeViewRoute");
+    if (isLogin == false) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.pinkAccent),
+              ),
+            );
+          });
+    }
 
+    //Navigator.pushNamed(context, "homeViewRoute");
     var userText = "";
     var passText = "";
-    if (username.length > 0 && password.length > 0) {
+    if (isLogin) {
       // check get user pass in shareRef
       userText = username;
       passText = password;
@@ -323,16 +365,16 @@ class _LoginPageState extends State<LoginPage> {
       //getdata in textfield
       userText = user.text;
       passText = pass.text;
-      print("data in TextField");
+      print("data in TextField:===========");
+      print(" user.text : " + userText);
+      print(" pass.text : " + passText);
+      saveLoginInfo(userText, passText); //save to sharedRef
+      print("data in TextField END:=======");
     }
-    print(userText);
-    print(passText);
-    print(apiRoot);
-    try {
-      if (userText.length > 0 && passText.length > 0) {
-        //saveLoginInfo(userText, passText);
-      }
 
+    saveLoginInfo(userText, passText); //save to sharedRef
+
+    try {
       Dio _dio = new Dio();
       Response response;
       var token;
@@ -346,58 +388,27 @@ class _LoginPageState extends State<LoginPage> {
             }), onSendProgress: (int sent, int total) {
           //print("Dio send: $sent $total");
         });
+
         print(response);
         token = response.toString();
       } on DioError catch (e) {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            duration: Duration(seconds: 2),
-            content: Text("Host không chính xác, Vui lòng nhập lại Host!!!",
-                style: TextStyle(fontSize: 20, color: Colors.black),
-                textAlign: TextAlign.center),
-            dismissDirection: DismissDirection.up,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            margin: EdgeInsets.only(
-                bottom: MediaQuery.of(context).size.height - 350,
-                left: 10,
-                right: 10),
-            backgroundColor: Color.fromARGB(255, 255, 46, 46),
-            //contentType: ContentType.failure,
-          ));
+        Navigator.of(context).pop();
+        String error = "Host không chính xác, Vui lòng nhập lại Host!!!";
+        showInSnackBar(error, true);
       }
 
       final body = json.decode(token);
       if (body['status'] == "false") {
         // CHECK LOGIN
+        Navigator.of(context).pop();
         var error = body['reason'];
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            duration: Duration(seconds: 2),
-            content: Text(error,
-                style: TextStyle(fontSize: 20, color: Colors.black),
-                textAlign: TextAlign.center),
-            dismissDirection: DismissDirection.up,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            margin: EdgeInsets.only(
-                bottom: MediaQuery.of(context).size.height - 350,
-                left: 10,
-                right: 10),
-            backgroundColor: Color.fromARGB(255, 255, 46, 46),
-            //contentType: ContentType.failure,
-          ));
+        showInSnackBar(error, true);
       } else {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString("login", token);
         print("Login successful");
-        Navigator.pushNamed(context, qrCodeReadViewRoute);
+        //Navigator.of(context).pop();
+        Navigator.popAndPushNamed(context, qrCodeReadViewRoute);
       }
     } catch (e) {
       print(e);

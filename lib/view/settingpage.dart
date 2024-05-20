@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:clean_dialog/clean_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,12 +18,14 @@ class _SettingPageState extends State<SettingPage> {
   var token = "";
   var username = "";
   var password = "";
+  String labelsText = "";
   bool checkSetting = false;
   @override
   void initState() {
     super.initState();
     setState(() {
       token = "";
+      labelsText = "Đăng Nhập";
       hostAddress = "";
       checkSetting = false; //chua login
       initToken();
@@ -37,6 +38,8 @@ class _SettingPageState extends State<SettingPage> {
     setState(() {
       hostAddress =
           (prefs.getString('host') == null ? "" : prefs.getString('host'))!;
+      _hostController
+        ..text = hostAddress.length == 0 ? "https://" : hostAddress;
     });
   }
 
@@ -52,7 +55,9 @@ class _SettingPageState extends State<SettingPage> {
     print("data SharedPreferences in setting page");
     print(username);
     print(password);
-
+    if (username.length == 0 || password.length == 0) {
+      labelsText = "Lưu";
+    }
     if (token.length == 0) {
       print("token: null-----");
       checkSetting = false; //chua login
@@ -175,7 +180,7 @@ class _SettingPageState extends State<SettingPage> {
         },
         backgroundColor: Color.fromARGB(255, 253, 190, 190),
         icon: Icon(Icons.login),
-        label: Text("Đăng Nhập"),
+        label: Text(labelsText),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );

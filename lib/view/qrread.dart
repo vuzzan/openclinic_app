@@ -10,7 +10,6 @@ import 'package:line_icons/line_icons.dart';
 import 'package:openclinic/_routing/routes.dart';
 import 'package:openclinic/utils/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -50,6 +49,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
   TextEditingController txtNGAY_YL = new TextEditingController();
   //-----
   DateTime selectedDate = DateTime.now();
+  String apiRoot = "";
   String NV_ID = "";
   String NV_NAME = "";
   String CLINIC_ID = "";
@@ -71,6 +71,10 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
   String MAXA_CU_TRU = "";
   //-----
   bool _isButtonDisabled = true;
+  bool checkEmpty = true;
+  bool checkNameEmpty = true;
+  bool checkDateBirthday = true;
+  String errorDateBirthday = "";
   //-----
   var token = "";
   var step = "checkthe"; // checkthe, checkdiachi, checkin (chon bs va pk)
@@ -79,7 +83,6 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
   //-----
   late AnimationController _controller;
   static const List<IconData> icons = const [Icons.settings, Icons.logout];
-  static const List<String> labels = const ['Cài đặt', 'Đăng xuất'];
 
   //
   void initState() {
@@ -92,6 +95,8 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
       step = "checkthe";
       _ValueDV = "";
       _ValueBS = "";
+      apiRoot = "";
+      errorDateBirthday = "Ngày không được để trống";
       selectedDate = DateTime.now();
     });
     initToken();
@@ -110,7 +115,8 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
       NV_NAME = Value["info"]["U_NAME"];
       CLINIC_ID = Value["info"]["CLINIC_ID"];
       CLINIC_MACSKCB = Value["info"]["CLINIC_MACSKCB"];
-
+      apiRoot =
+          (prefs.getString('host') == null ? "" : prefs.getString('host'))!;
       for (final item in Value["mst"]["data"]) {
         if (item["LIST_BS"] == null) {
           // No add
@@ -135,6 +141,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
       print(_ValueDV);
       print(CLINIC_MACSKCB);
       print(CLINIC_ID);
+      print(apiRoot);
       print("init state END--------------------------");
     });
   }
@@ -167,15 +174,6 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> Checkin_del() async {
-    const url = 'https://vnem.com/test/checkthe.json';
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      throw qrResult = 'Sai';
-    }
-  }
-
   void GetValue(String value) {
     //var valSend = <String>{};
     var valSend = [];
@@ -201,7 +199,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
     ReturnDataText(valSend);
   }
 
-  ReturnDataText(arrValSend) {
+  void ReturnDataText(arrValSend) {
     String dataToCheck = "";
     int countCCCD = 11;
     arrValSend.forEach((element) {
@@ -240,11 +238,21 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
   }
 
   Future<void> CheckThe() async {
+    UpdateDateTime();
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.pinkAccent),
+            ),
+          );
+        });
+
     Response response;
     try {
       Dio _dio = new Dio();
-      String url =
-          "http://saigon.webhop.me:8282/app/checkin/senddoublecheck.php";
+      String url = apiRoot + "/app/checkin/senddoublecheck.php";
       response = await _dio.post(url,
           data: FormData.fromMap({
             "TEN_BENH_NHAN": txtTenBenhNhan.text,
@@ -256,68 +264,51 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
           }),
           onSendProgress: (int sent, int total) {});
       var tokenCheck = response.toString();
-      print(tokenCheck);
+
       print("RESPONSE CHECK THE: --------------------------");
       final ValResponse = json.decode(tokenCheck);
       print(ValResponse);
-      print(ValResponse["code"]);
-      print(ValResponse["data"]["strMathe"]);
-      print(ValResponse["data"]["strHoTen"]);
-      print(ValResponse["data"]["strDiaChi"]);
-      print(ValResponse["data"]["strTuNgay"]);
-      print(ValResponse["data"]["strDenNgay"]);
-      print(ValResponse["data"]["gioitinh"]);
-      print(ValResponse["data"]["strThoidiem5Nam"]);
-      final checkCode = ValResponse["data"]["checkCode"];
-      if (checkCode == "000") {
-        setState(() {
-          step = "checkdiachi";
-          GT_THE_TU = ValResponse["data"]["strTuNgay"];
-          GT_THE_DEN = ValResponse["data"]["strDenNgay"];
-          THOIDIEM_NAMNAM = ValResponse["data"]["strThoidiem5Nam"];
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              duration: Duration(seconds: 2),
-              content: Text("Kiểm tra thẻ thành công !!!",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                  ),
-                  textAlign: TextAlign.center),
-              dismissDirection: DismissDirection.up,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              margin: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.height - 90,
-                  left: 10,
-                  right: 10),
+      final code = ValResponse["code"];
+      print(code.runtimeType);
 
-              backgroundColor: Color.fromARGB(255, 46, 255, 140),
-              //contentType: ContentType.failure,
-            ));
-          txtMatheBHYT..text = ValResponse["data"]["strMathe"];
-          txtGioiTinh
-            ..text = ValResponse["data"]["gioitinh"] == 1 ? "Nam" : "Nữ";
-          txtTenBenhNhan..text = ValResponse["data"]["strHoTen"];
-          txtNgaySinh..text = ValResponse["data"]["strNgaySinh"];
-          txtDiaChi..text = ValResponse["data"]["strDiaChi"];
-          txtHSD
-            ..text = "Từ ngày: " +
-                ValResponse["data"]["strTuNgay"] +
-                " đến ngày: " +
-                ValResponse["data"]["strDenNgay"];
-        });
+      if (code == 0) {
+        //get token true
+        final checkCode = ValResponse["data"]["checkCode"];
+        print(checkCode.runtimeType);
+        if (checkCode == "000") {
+          Navigator.of(context).pop();
+          setState(() {
+            step = "checkdiachi";
+            GT_THE_TU = ValResponse["data"]["strTuNgay"];
+            GT_THE_DEN = ValResponse["data"]["strDenNgay"];
+            THOIDIEM_NAMNAM = ValResponse["data"]["strThoidiem5Nam"];
+            String value = "Kiểm tra thẻ thành công !!!";
+            showInSnackBar(value, false);
+            txtMatheBHYT..text = ValResponse["data"]["strMathe"];
+            txtGioiTinh
+              ..text = ValResponse["data"]["gioitinh"] == 1 ? "Nam" : "Nữ";
+            txtTenBenhNhan..text = ValResponse["data"]["strHoTen"];
+            txtNgaySinh..text = ValResponse["data"]["strNgaySinh"];
+            txtDiaChi..text = ValResponse["data"]["strDiaChi"];
+            txtHSD
+              ..text = "Từ ngày: " +
+                  ValResponse["data"]["strTuNgay"] +
+                  " đến ngày: " +
+                  ValResponse["data"]["strDenNgay"];
+          });
+        } else {
+          // check sai thẻ
+          Navigator.of(context).pop();
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          prefs.setString("erorr", ValResponse["data"]["checkText"]);
+          Navigator.pushNamed(context, showError);
+        }
       } else {
-        // check sai thẻ
-        setState(() {
-          step = "showerror";
-        });
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setString("erorr", ValResponse["data"]["checkText"]);
-        Navigator.pushNamed(context, showError);
+        //get token fail
+
+        String error = ValResponse["data"];
+        showInSnackBar(error, true);
+        Navigator.of(context).pop();
       }
     } catch (e) {
       print(e);
@@ -331,10 +322,20 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
     MAHUYEN_CU_TRU = values[2];
     MAXA_CU_TRU = values[1];
     MATINH_CU_TRU = values[3];
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.pinkAccent),
+            ),
+          );
+        });
+
     Response response;
     try {
       Dio _dio = new Dio();
-      String url = "http://saigon.webhop.me:8282/app/checkin/loaddv.php";
+      String url = apiRoot + "/app/checkin/loaddv.php";
       response = await _dio.post(url,
           data: FormData.fromMap({
             "func": "sendCheckDiaChi",
@@ -351,50 +352,17 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
       final ValResponse = json.decode(tokenCheck);
       print(ValResponse);
       if (ValResponse["data"] != false) {
+        String val = "Kiểm tra địa chỉ thành công !!!";
+        Navigator.of(context).pop();
         setState(() {
           step = "checkin";
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              duration: Duration(seconds: 2),
-              content: Text("Kiểm tra địa chỉ thành công !!!",
-                  style: TextStyle(fontSize: 20, color: Colors.black),
-                  textAlign: TextAlign.center),
-              dismissDirection: DismissDirection.up,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              margin: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.height - 90,
-                  left: 10,
-                  right: 10),
-              backgroundColor: Color.fromARGB(255, 46, 255, 140),
-            ));
+          showInSnackBar(val, false);
         });
       } else {
         //sai
-        var content = "Sai Địa Chỉ Xin Mời Nhập Lại";
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-                duration: Duration(seconds: 2),
-                content: Text(content,
-                    style: TextStyle(fontSize: 20, color: Colors.black),
-                    textAlign: TextAlign.center),
-                dismissDirection: DismissDirection.up,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                margin: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).size.height - 350,
-                    left: 10,
-                    right: 10),
-                backgroundColor: Color.fromARGB(255, 255, 0, 0)),
-            //contentType: ContentType.failure,
-          );
+        Navigator.of(context).pop();
+        var error = "Sai Địa Chỉ Xin Mời Nhập Lại";
+        showInSnackBar(error, true);
       }
       print("END RESPONSE CHECK DIA CHI: -------------------------------");
 
@@ -410,8 +378,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
     try {
       print("RESPONSE XacNhan : --------------------------");
       Dio _dio = new Dio();
-      String KETQUA_CODE;
-      String url = "http://saigon.webhop.me:8282/app/checkin/mstdata.php";
+      String url = apiRoot + "/app/checkin/mstdata.php";
       response = await _dio.post(url,
           data: FormData.fromMap({
             "TEN_BENH_NHAN": txtTenBenhNhan.text,
@@ -422,8 +389,8 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
             "NGAY_SINH": txtNgaySinh.text,
             "MA_THE": txtMatheBHYT.text,
             "MA_LK": "0",
-            //"MA_DKBD": CLINIC_MACSKCB,
-            "MA_DKBD": "49172", //debug
+            "MA_DKBD": CLINIC_MACSKCB,
+            //"MA_DKBD": "49172", //debug
             "NV_ID": NV_ID,
             "NV_NAME": NV_NAME,
             "U_ID": U_ID_BS,
@@ -454,27 +421,8 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
       //KETQUA_CODE = body["res"]["MA_LK"] == null ? "0" : body["res"]["MA_LK"];
       if (body["res"]["KETQUA_CODE"] == null ||
           body["res"]["KETQUA_CODE"] == 0) {
-        var content = body["res"]["KETQUA"] + " xin mời Checkin";
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-                duration: Duration(seconds: 2),
-                content: Text(content,
-                    style: TextStyle(fontSize: 20, color: Colors.black),
-                    textAlign: TextAlign.center),
-                dismissDirection: DismissDirection.up,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                margin: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).size.height - 350,
-                    left: 10,
-                    right: 10),
-                backgroundColor: Colors.green),
-            //contentType: ContentType.failure,
-          );
+        String content = body["res"]["KETQUA"] + " xin mời Checkin";
+        showInSnackBar(content, false);
         setState(() {
           _isButtonDisabled = false;
           print(body["res"]["MA_LK"]);
@@ -482,27 +430,8 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
         });
       } else {
         var error = body["res"]["KETQUA"];
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            duration: Duration(seconds: 2),
-            content: Text(error,
-                style: TextStyle(fontSize: 20, color: Colors.black),
-                textAlign: TextAlign.center),
-            dismissDirection: DismissDirection.up,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            margin: EdgeInsets.only(
-                bottom: MediaQuery.of(context).size.height - 350,
-                left: 10,
-                right: 10),
-            backgroundColor: Color.fromARGB(255, 255, 46, 46),
-            //contentType: ContentType.failure,
-          ));
+        showInSnackBar(error, true);
       }
-
       print("RESPONSE XacNhan END : --------------------------");
     } catch (e) {
       print(e);
@@ -510,13 +439,23 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
   }
 
   Future<void> CheckInBHYT() async {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.pinkAccent),
+            ),
+          );
+        });
     try {
+      Navigator.of(context).pop();
       Response response;
       print("RESPONSE CheckInBHYT : --------------------------");
       print(MaLK);
       print(CLINIC_ID);
       Dio _dio = new Dio();
-      String url = "http://saigon.webhop.me:8282/app/checkin/appcheckin.php";
+      String url = apiRoot + "/app/checkin/appcheckin.php";
       response = await _dio.post(url,
           data: FormData.fromMap({"ma_lk": MaLK, "CLINIC_ID": CLINIC_ID}),
           onSendProgress: (int sent, int total) {});
@@ -550,6 +489,27 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
     }
   }
 
+  void showInSnackBar(String value, bool isError) {
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        duration: Duration(seconds: 2),
+        content: Text(value,
+            style: TextStyle(fontSize: 20, color: Colors.black),
+            textAlign: TextAlign.center),
+        dismissDirection: DismissDirection.up,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        margin: EdgeInsets.only(bottom: 100, left: 10, right: 10),
+        backgroundColor: isError
+            ? Color.fromARGB(255, 255, 46, 46)
+            : Color.fromARGB(255, 46, 255, 140),
+        //contentType: ContentType.failure,
+      ));
+  }
+
   void GetValueBS(String valueBS) {
     var values = valueBS.split(' ');
     BS = values.last;
@@ -576,7 +536,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
     try {
       Dio _dio = new Dio();
       response = await _dio.post(
-        "http://saigon.webhop.me:8282/app/checkin/apiclient.php",
+        apiRoot + "/app/checkin/apiclient.php",
       );
       var token = response.toString();
       final body = json.decode(token);
@@ -603,6 +563,151 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
     }
   }
 
+  bool isNumeric(String s) {
+    if (s.isEmpty) {
+      return false;
+    }
+    return double.tryParse(s) != null;
+  }
+
+  void UpdateDateTime() {
+    String DateTime = txtNgaySinh.text;
+    String ngay = "";
+    String thang = "";
+    String thang1 = "";
+    String thang2 = "";
+    String nam = "";
+    print(DateTime);
+    print("DateTime.length truoc par:" + DateTime.length.toString());
+    if (DateTime.length < 8) {
+      if (isNumeric(DateTime)) {
+        //check nummber and null
+        print("La 1 so nguyen");
+        print("DateTime.length: " + DateTime.length.toString());
+        if (DateTime.length < 4) {
+          print("STRING < 4");
+          setState(() {
+            checkDateBirthday = false;
+            errorDateBirthday = "Định dạng cần nhập là DD/MM/YY";
+          });
+        } else {
+          if (DateTime.length == 4) {
+            if (int.parse(DateTime) > 1900 && int.parse(DateTime) < 2025) {
+              DateTime = "01/01/" + DateTime;
+            } else {
+              ngay = DateTime.substring(0, 1);
+              thang = DateTime.substring(1, 2);
+              nam = DateTime.substring(2, 4);
+              if (int.parse(nam) < 23) {
+                DateTime = "0" + ngay + "/" + "0" + thang + "/" + "20" + nam;
+              } else {
+                DateTime = "0" + ngay + "/" + "0" + thang + "/" + "19" + nam;
+              }
+            }
+          } else if (DateTime.length == 7) {
+            ngay = DateTime.substring(0, 2);
+            thang1 = DateTime.substring(2, 3);
+            thang2 = DateTime.substring(1, 3);
+            nam = DateTime.substring(3, 7);
+            if (int.parse(thang2) > 12) {
+              if (int.parse(ngay) > 31) {
+                ngay = DateTime.substring(0, 1);
+                DateTime = "0" + ngay + "/" + thang2 + "/" + nam;
+              } else {
+                DateTime = ngay + "/0" + thang1 + "/" + nam;
+              }
+            } else {
+              if (int.parse(ngay) > 31) {
+                ngay = DateTime.substring(0, 1);
+                DateTime = "0" + ngay + "/" + thang2 + "/" + nam;
+              } else {
+                DateTime = ngay + "/0" + thang1 + "/" + nam;
+              }
+            }
+          } else if (DateTime.length == 6) {
+            ngay = DateTime.substring(0, 2);
+            thang = DateTime.substring(2, 4);
+            nam = DateTime.substring(4, 6);
+            if (int.parse(nam) < 23) {
+              if (int.parse(ngay) > 31 || int.parse(thang) > 12) {
+                ngay = DateTime.substring(0, 1);
+                thang = DateTime.substring(1, 2);
+                nam = DateTime.substring(2, 6);
+                DateTime = "0" + ngay + "/0" + thang + "/" + nam;
+              } else {
+                DateTime = ngay + "/" + thang + "/" + "20" + nam;
+              }
+            } else {
+              if (int.parse(ngay) > 31 || int.parse(thang) > 12) {
+                ngay = DateTime.substring(0, 1);
+                thang = DateTime.substring(1, 2);
+                nam = DateTime.substring(2, 6);
+                DateTime = "0" + ngay + "/0" + thang + "/" + nam;
+              } else {
+                DateTime = ngay + "/" + thang + "/" + "19" + nam;
+              }
+            }
+          } else if (DateTime.length == 8) {
+            ngay = DateTime.substring(0, 2);
+            thang = DateTime.substring(2, 4);
+            nam = DateTime.substring(4, 8);
+            DateTime = ngay + "/" + thang + "/" + nam;
+          }
+          print(DateTime);
+          setState(() {
+            checkDateBirthday = true;
+            txtNgaySinh..text = DateTime;
+          });
+        }
+      } else {
+        print("DateTime kh phai so La :" + DateTime);
+        if (DateTime.isEmpty) {
+          setState(() {
+            checkDateBirthday = false;
+            errorDateBirthday = "Không được để rỗng";
+          });
+        } else {
+          setState(() {
+            checkDateBirthday = false;
+            errorDateBirthday = "Không được nhập chữ VD:(29/02/2024)";
+          });
+        }
+      }
+    }
+  }
+
+  void CheckTenBenhNhan() {
+    String tenBN = txtTenBenhNhan.text;
+    print(tenBN);
+    if (tenBN.length == 0) {
+      //CheckMaThe();
+      print("tenBN.length: " + tenBN.length.toString());
+      setState(() {
+        checkNameEmpty = false;
+      });
+    } else {
+      setState(() {
+        checkNameEmpty = true;
+      });
+    }
+  }
+
+  void CheckMaThe() {
+    String MaThe = txtMatheCCCD.text;
+    print(MaThe);
+    if (MaThe.length == 0) {
+      //CheckTenBenhNhan();
+      print("MaThe.length: " + MaThe.length.toString());
+      setState(() {
+        checkEmpty = false;
+      });
+    } else {
+      setState(() {
+        checkEmpty = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Color backgroundColor = Color.fromARGB(255, 253, 190, 190);
@@ -613,66 +718,113 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
 
     final checkThe =
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-      TextFormField(
-        controller: txtMatheCCCD..text,
-        decoration: InputDecoration(
-          labelText: 'Mã Thẻ/CCCD',
-          labelStyle: TextStyle(color: Colors.white),
-          prefixIcon: Icon(
-            LineIcons.barcode,
-            color: Colors.white,
+      Focus(
+        child: TextFormField(
+          onEditingComplete: () {
+            print('Tên Bệnh Nhân editing complete');
+            CheckMaThe();
+            FocusScope.of(context).nextFocus();
+          },
+          autofocus: true,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(15),
+          ],
+          controller: txtMatheCCCD..text = "GD4494920688744",
+          decoration: InputDecoration(
+            labelText: 'Mã Thẻ/CCCD',
+            labelStyle: TextStyle(color: Colors.white),
+            errorText: checkEmpty ? null : 'Mã không được để trống',
+            prefixIcon: Icon(
+              LineIcons.barcode,
+              color: Colors.white,
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
           ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
+          keyboardType: TextInputType.emailAddress,
+          style: TextStyle(color: Colors.white),
+          cursorColor: Colors.white,
         ),
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(color: Colors.white),
-        cursorColor: Colors.white,
+        onFocusChange: (hasFocus) {
+          hasFocus ? print('Focus MAThe: ') : CheckMaThe();
+        },
       ),
-      TextFormField(
-        controller: txtTenBenhNhan..text,
-        decoration: InputDecoration(
-          labelText: 'Tên Bệnh Nhân',
-          labelStyle: TextStyle(color: Colors.white),
-          prefixIcon: Icon(
-            LineIcons.user,
-            color: Colors.white,
+      Focus(
+        child: TextFormField(
+          onEditingComplete: () {
+            print('Tên Bệnh Nhân editing complete');
+            CheckTenBenhNhan();
+            FocusScope.of(context).nextFocus();
+          },
+          controller: txtTenBenhNhan..text = "Lương Mạnh Việt",
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(30),
+          ],
+          decoration: InputDecoration(
+            labelText: 'Tên Bệnh Nhân',
+            labelStyle: TextStyle(color: Colors.white),
+            errorText: checkNameEmpty ? null : 'Tên không được để trống',
+            prefixIcon: Icon(
+              LineIcons.user,
+              color: Colors.white,
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
           ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
+          keyboardType: TextInputType.emailAddress,
+          style: TextStyle(color: Colors.white),
+          cursorColor: Colors.white,
         ),
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(color: Colors.white),
-        cursorColor: Colors.white,
+        onFocusChange: (hasFocus) {
+          hasFocus ? print('Focus Ten Benh Nhan: ') : CheckTenBenhNhan();
+        },
       ),
-      TextFormField(
-        controller: txtNgaySinh..text,
-        onTap: () => _selectDate(context),
-        decoration: InputDecoration(
-          labelText: 'Ngày Sinh',
-          labelStyle: TextStyle(color: Colors.white),
-          prefixIcon: Icon(
-            LineIcons.birthdayCake,
-            color: Colors.white,
+      Focus(
+        child: TextFormField(
+          controller: txtNgaySinh..text = "12/12/2000",
+          onEditingComplete: () {
+            print('NgaySinh editing complete');
+            UpdateDateTime();
+            FocusScope.of(context).nextFocus();
+          },
+          decoration: InputDecoration(
+            errorText: checkDateBirthday ? null : errorDateBirthday,
+            border: InputBorder.none,
+            suffixIcon: IconButton(
+              onPressed: () => setState(() {
+                _selectDate(context);
+              }),
+              icon: const Icon(Icons.date_range_rounded),
+              iconSize: 35,
+            ),
+            labelText: 'Ngày Sinh',
+            labelStyle: TextStyle(color: Colors.white),
+            prefixIcon: Icon(
+              LineIcons.birthdayCake,
+              color: Colors.white,
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
           ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
+          keyboardType: TextInputType.emailAddress,
+          style: TextStyle(color: Colors.white),
+          cursorColor: Colors.white,
         ),
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(color: Colors.white),
-        cursorColor: Colors.white,
+        onFocusChange: (hasFocus) {
+          hasFocus ? print('FocusNgaySinh: ') : UpdateDateTime();
+        },
       ),
       Container(
         margin: EdgeInsets.only(top: 40.0),
@@ -1380,100 +1532,127 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
         ],
       ),
     ]);
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-                flex: 2,
-                child: Text(
-                  'Check In Bệnh Nhân',
-                  textAlign: TextAlign.left,
-                )),
-            Flexible(
-                flex: 1,
-                child:
-                    ElevatedButton(onPressed: scanQR, child: Text('Quét Mã'))),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
-          decoration: BoxDecoration(gradient: primaryGradient),
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: step == "checkthe"
-              ? checkThe
-              : (step == "checkdiachi"
-                  ? checkDiaChi
-                  : (step == "checkin"
-                      ? checkIn
-                      : (step == "CheckInBHYT" ? sendCheckBHYT : checkThe))),
-        ),
-      ),
-      floatingActionButton: new Column(
-        mainAxisSize: MainAxisSize.min,
-        children: new List.generate(icons.length, (int index) {
-          Widget child = new Container(
-            height: 55.0,
-            width: 56.0,
-            alignment: FractionalOffset.topCenter,
-            child: new ScaleTransition(
-              scale: new CurvedAnimation(
-                parent: _controller,
-                curve: new Interval(0.0, 1.0 - index / icons.length / 2.0,
-                    curve: Curves.easeOut),
-              ),
-              child: new FloatingActionButton(
-                heroTag: null,
-                backgroundColor: backgroundColor,
-                mini: true,
-                child:
-                    new Icon(icons[index], color: foregroundColor, size: 30.0),
-                onPressed: () async {
-                  if (index == 1) {
-                    SharedPreferences preferences =
-                        await SharedPreferences.getInstance();
-                    await preferences
-                        .clear(); // clear data username,password,host
-                    Navigator.pushNamed(context, landingViewRoute);
-                  } else {
-                    Navigator.pushNamed(context, settingPage);
-                  }
-                },
-              ),
-            ),
-          );
-          return child;
-        }).toList()
-          ..add(
-            new FloatingActionButton(
-              heroTag: null,
-              child: new AnimatedBuilder(
-                animation: _controller,
-                builder: (BuildContext context, Widget? child) {
-                  return new Transform(
-                    transform: new Matrix4.rotationZ(
-                        _controller.value * 0.5 * math.pi),
-                    alignment: FractionalOffset.center,
-                    child: new Icon(
-                        _controller.isDismissed ? Icons.add : Icons.close,
-                        color: Colors.black),
-                  );
-                },
-              ),
-              onPressed: () {
-                if (_controller.isDismissed) {
-                  _controller.forward();
-                } else {
-                  _controller.reverse();
-                }
-              },
+    return WillPopScope(
+        onWillPop: () async {
+          var val = await showDialog<bool>(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("Xác Nhận"),
+                  content: Text("Nhấn OK Để Trở Về"),
+                  actions: [
+                    ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('OK')),
+                    ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('No')),
+                  ],
+                );
+              });
+          if (val != null) {
+            return Future.value(val);
+          } else {
+            return Future.value(false);
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                    flex: 2,
+                    child: Text(
+                      'Check In Bệnh Nhân',
+                      textAlign: TextAlign.left,
+                    )),
+                Flexible(
+                    flex: 1,
+                    child: ElevatedButton(
+                        onPressed: scanQR, child: Text('Quét Mã'))),
+              ],
             ),
           ),
-      ),
-    );
+          body: SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
+              decoration: BoxDecoration(gradient: primaryGradient),
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              child: step == "checkthe"
+                  ? checkThe
+                  : (step == "checkdiachi"
+                      ? checkDiaChi
+                      : (step == "checkin"
+                          ? checkIn
+                          : (step == "CheckInBHYT"
+                              ? sendCheckBHYT
+                              : checkThe))),
+            ),
+          ),
+          floatingActionButton: new Column(
+            mainAxisSize: MainAxisSize.min,
+            children: new List.generate(icons.length, (int index) {
+              Widget child = new Container(
+                height: 55.0,
+                width: 56.0,
+                alignment: FractionalOffset.topCenter,
+                child: new ScaleTransition(
+                  scale: new CurvedAnimation(
+                    parent: _controller,
+                    curve: new Interval(0.0, 1.0 - index / icons.length / 2.0,
+                        curve: Curves.easeOut),
+                  ),
+                  child: new FloatingActionButton(
+                    heroTag: null,
+                    backgroundColor: backgroundColor,
+                    mini: true,
+                    child: new Icon(icons[index],
+                        color: foregroundColor, size: 30.0),
+                    onPressed: () async {
+                      if (index == 1) {
+                        SharedPreferences preferences =
+                            await SharedPreferences.getInstance();
+                        await preferences.remove('username');
+                        await preferences.remove('password');
+                        // await preferences.clear(); // clear data username,password,host
+                        Navigator.pushNamed(context, landingViewRoute);
+                      } else {
+                        Navigator.pushNamed(context, settingPage);
+                      }
+                    },
+                  ),
+                ),
+              );
+              return child;
+            }).toList()
+              ..add(
+                new FloatingActionButton(
+                  heroTag: null,
+                  child: new AnimatedBuilder(
+                    animation: _controller,
+                    builder: (BuildContext context, Widget? child) {
+                      return new Transform(
+                        transform: new Matrix4.rotationZ(
+                            _controller.value * 0.5 * math.pi),
+                        alignment: FractionalOffset.center,
+                        child: new Icon(
+                            _controller.isDismissed ? Icons.add : Icons.close,
+                            color: Colors.black),
+                      );
+                    },
+                  ),
+                  onPressed: () {
+                    if (_controller.isDismissed) {
+                      _controller.forward();
+                    } else {
+                      _controller.reverse();
+                    }
+                  },
+                ),
+              ),
+          ),
+        ));
   }
 }
