@@ -373,12 +373,12 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     saveLoginInfo(userText, passText); //save to sharedRef
-
     try {
       Dio _dio = new Dio();
       Response response;
       var token;
       try {
+        //response true
         response = await _dio.post(apiRoot + "/app/login/login.php",
             data: FormData.fromMap({
               "device": "app",
@@ -392,6 +392,7 @@ class _LoginPageState extends State<LoginPage> {
         print(response);
         token = response.toString();
       } on DioError catch (e) {
+        //response fail
         Navigator.of(context).pop();
         String error = "Host không chính xác, Vui lòng nhập lại Host!!!";
         showInSnackBar(error, true);

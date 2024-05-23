@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'dart:convert';
 import 'package:convert/convert.dart';
@@ -422,12 +420,8 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
       if (body["res"]["KETQUA_CODE"] == null ||
           body["res"]["KETQUA_CODE"] == 0) {
         String content = body["res"]["KETQUA"] + " xin mời Checkin";
-        showInSnackBar(content, false);
-        setState(() {
-          _isButtonDisabled = false;
-          print(body["res"]["MA_LK"]);
-          MaLK = body["res"]["MA_LK"];
-        });
+        //showInSnackBar(content, false);
+        _showMyDialog(body);
       } else {
         var error = body["res"]["KETQUA"];
         showInSnackBar(error, true);
@@ -729,7 +723,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
           inputFormatters: [
             LengthLimitingTextInputFormatter(15),
           ],
-          controller: txtMatheCCCD..text,
+          controller: txtMatheCCCD..text = "GD4494920688744",
           decoration: InputDecoration(
             labelText: 'Mã Thẻ/CCCD',
             labelStyle: TextStyle(color: Colors.white),
@@ -760,7 +754,7 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
             CheckTenBenhNhan();
             FocusScope.of(context).nextFocus();
           },
-          controller: txtTenBenhNhan..text,
+          controller: txtTenBenhNhan..text = "Lương Mạnh Việt",
           inputFormatters: [
             LengthLimitingTextInputFormatter(30),
           ],
@@ -845,6 +839,27 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
             ),
           ),
           child: Text('CHECK THẺ'),
+        ),
+      ),
+      Container(
+        margin: EdgeInsets.only(top: 40.0),
+        height: 60.0,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(7.0),
+            border: Border.all(color: Colors.white),
+            gradient: chatBubbleGradient2),
+        child: TextButton(
+          onPressed: null,
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.black87,
+            minimumSize: Size(88, 36),
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(2.0)),
+            ),
+          ),
+          child: Text('LƯU THÔNG TIN BỆNH NHÂN'),
         ),
       )
     ]);
@@ -1654,5 +1669,53 @@ class _QrReadPageState extends State<QRReadPage> with TickerProviderStateMixin {
               ),
           ),
         ));
+  }
+
+  Future<void> _showMyDialog([body]) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Xác Nhận Thành Công'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Text('Đã lưu vào danh sách khám bệnh'),
+                Text('Bạn có muốn Checkin để gởi lên BHYT'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Có'),
+              onPressed: () {
+                setState(() {
+                  txtMatheCCCD..text = "";
+                  txtTenBenhNhan..text = "";
+                  txtNgaySinh..text = "";
+                  _isButtonDisabled = false;
+                  print(body["res"]["MA_LK"]);
+                  MaLK = body["res"]["MA_LK"];
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Quay Lại'),
+              onPressed: () {
+                setState(() {
+                  txtMatheCCCD..text = "";
+                  txtTenBenhNhan..text = "";
+                  txtNgaySinh..text = "";
+                  step = "checkthe";
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
